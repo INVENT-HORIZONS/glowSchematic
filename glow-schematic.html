@@ -485,10 +485,13 @@ def('m_diode_ih', { cat: 'Tube, modern', name: 'Diode, indirect', pre: 'V', valu
     + pa('M-10 50 V26 A10 10 0 0 1 10 26 V50', 'htr') });
 def('m_rect', { cat: 'Tube, modern', name: 'Full-wave rectifier', pre: 'V', value: '5Y3', tags: '5u4 80 5ar4 gz34', hooks: { P1: [-20, -50], P2: [20, -50], F1: [-10, 50], F2: [10, 50] },
   draw: () => pa(stadium(20, 30), 'env') + ln(-32, -10, -8, -10) + ln(8, -10, 32, -10) + ln(-20, -10, -20, -50) + ln(20, -10, 20, -50) + filV(8, 24, 50) });
+def('m_triode_dh', { cat: 'Tube, modern', name: 'Triode, direct', pre: 'V', value: '2A3', tags: '300b 45 directly heated', hooks: { P: [0, -50], G: [-50, 0], F1: [-10, 50], F2: [10, 50] },
+  draw: () => ci(0, 0, 30, 'env') + ln(-12, -15, 12, -15) + ln(0, -15, 0, -50) + ln(-15, 0, 15, 0, 'dash') + ln(-50, 0, -15, 0) + filV(10, 24, 50) });
 def('m_triode', { cat: 'Tube, modern', name: 'Triode', pre: 'V', value: '6J5', tags: '12ax7 half 6sn7', hooks: { P: [0, -50], G: [-50, 0], K: [-10, 50] },
   draw: () => ci(0, 0, 30, 'env') + ln(-12, -15, 12, -15) + ln(0, -15, 0, -50) + ln(-15, 0, 15, 0, 'dash') + ln(-50, 0, -15, 0) + cath(-10, 12, 15, -10, 50) });
-def('m_triode_dh', { cat: 'Tube, modern', name: 'Triode, filament', pre: 'V', value: '2A3', tags: '300b 45 directly heated', hooks: { P: [0, -50], G: [-50, 0], F1: [-10, 50], F2: [10, 50] },
-  draw: () => ci(0, 0, 30, 'env') + ln(-12, -15, 12, -15) + ln(0, -15, 0, -50) + ln(-15, 0, 15, 0, 'dash') + ln(-50, 0, -15, 0) + filV(10, 24, 50) });
+def('m_triode_ih', { cat: 'Tube, modern', name: 'Triode, indirect', pre: 'V', value: '6J5', tags: '12ax7 half 6sn7 indirectly heated heater', hooks: { P: [0, -50], G: [-50, 0], K: [-20, 50], H1: [-10, 50], H2: [10, 50] },
+  draw: () => ci(0, 0, 30, 'env') + ln(-17, -15, 17, -15) + ln(0, -15, 0, -50) + ln(-17, 0, 17, 0, 'dash') + ln(-50, 0, -17, 0) + cath(-20, 19, 10, -20, 50)
+    + pa('M-10 50 V27 A10 10 0 0 1 10 27 V50', 'htr') });
 def('m_twin', { cat: 'Tube, modern', name: 'Twin triode', pre: 'V', value: '12AX7', tags: '12au7 12at7 6sn7 ecc83', hooks: { P1: [-30, -50], G1: [-70, 0], K1: [-40, 50], P2: [30, -50], G2: [70, 0], K2: [20, 50] },
   draw: () => pa(stadium(30, 30), 'env')
     + ln(-42, -15, -18, -15) + ln(-30, -15, -30, -50) + ln(-45, 0, -15, 0, 'dash') + ln(-70, 0, -45, 0) + cath(-40, -18, 15, -40, 50)

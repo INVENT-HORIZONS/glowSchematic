@@ -1,0 +1,44 @@
+# Glow Schematic
+
+A browser-based schematic editor for **The Glow Report**, a weekly vacuum-tube newsletter. It draws with the newsletter's own symbol library, so schematics made here match the figures in print.
+
+Open `glow-schematic.html` in any modern browser. Everything is in the one file; no install or build step.
+
+## Features
+
+- **Symbol library (47 parts):** passives, transformers (including ultra-linear and center-tapped), heaters, connections, modern tubes, and 1920s and 1930s period tubes for the Vintage Tube spotlight.
+- **Hooks on a 0.1 in grid:** every connection point lands on the grid, even after rotating or mirroring. Ref des and value labels move on a finer 0.05 in grid.
+- **Wiring:** click a hook to start, click to add corners, and finish on a hook or wire. Space flips the corner. Junction dots appear automatically.
+- **Editing:**
+  - Drag parts and the wires follow.
+  - Drag a wire segment to move it.
+  - Right-click to rotate, mirror or delete.
+  - Double-click a part, its ref des or its value to edit.
+  - Delete on a selected label hides it instead of deleting anything.
+- **Toolbox:** Select (V), Wire (W), Text (T), Scissors (C, cuts a whole part or wire) and Segment scissors (S, cuts one wire segment).
+- **Sheets:** ANSI A (Letter), B (Tabloid), C and D, portrait or landscape, with mixed sizes in one project. Each sheet can have:
+  - A zoned border.
+  - A revision chart.
+  - A title block with logo, company, project, sheet title, file name, part number, size, revision, sheet *n* of *m*, and drawn, checked and approved by.
+- **Movable blocks:** the title block and revision chart drag anywhere and stick to any corner.
+- **Project tree:** schematics are listed by file name; double-click to rename.
+- **Export:** whole sheet or drawing only, as SVG or PNG, plus a project file (.json) you can import later.
+
+## Colors
+
+The sheet uses the newsletter's palette: paper `#FBF8F3`, ink `#17120E`, and glow `#E8912D` for heaters and filaments only. Every wire is ink.
+
+## Keys
+
+| Key | Action |
+| --- | --- |
+| V / W / T / C / S | Select, Wire, Text, Scissors, Segment scissors |
+| R / X | Rotate, mirror |
+| Del | Delete the selection (hides a selected label) |
+| Ctrl+Z / Ctrl+Y | Undo, redo |
+| Ctrl+C / Ctrl+V / Ctrl+D | Copy, paste, duplicate |
+| F / Shift+F | Fit sheet, fit drawing |
+| Wheel / Shift+wheel / Alt+wheel | Zoom, pan up/down, pan left/right |
+| Space (while wiring) | Flip the corner |
+
+Add `#fresh` to the end of the address to start on the example sheet without opening saved work.

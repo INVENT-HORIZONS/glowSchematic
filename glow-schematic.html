@@ -461,21 +461,23 @@ def('heater_ct_tri', { cat: 'Heater', name: 'Heater, center tap, triangle', pre:
   draw: () => pa('M0 0 H8 L15 -7 L22 0 H38 L45 -7 L52 0 H60', 'htr') + ln(30, 0, 30, 20, 'htr') });
 
 /* ---- power and connections ---- */
-def('ground', { cat: 'Connection', name: 'Ground', pre: 'GND', value: '0 V', hooks: { G: [0, 0] }, hideLabel: true,
+def('ground', { cat: 'Power', name: 'Ground', pre: 'GND', value: '0 V', hooks: { G: [0, 0] }, hideLabel: true,
   draw: () => ln(0, 0, 0, 10) + ln(-10, 10, 10, 10) + ln(-6, 14, 6, 14) + ln(-2, 18, 2, 18) });
-def('chassis', { cat: 'Connection', name: 'Chassis', pre: 'CH', value: 'chassis', hooks: { G: [0, 0] }, hideLabel: true,
+def('chassis', { cat: 'Power', name: 'Chassis', pre: 'CH', value: 'chassis', hooks: { G: [0, 0] }, hideLabel: true,
   draw: () => ln(0, 0, 0, 10) + ln(-10, 10, 10, 10) + ln(-10, 10, -15, 17) + ln(-3, 10, -8, 17) + ln(4, 10, -1, 17) + ln(10, 10, 5, 17) });
-def('supply', { cat: 'Connection', name: 'Supply (B+)', pre: 'PS', value: 'B+ 250 V', tags: 'b+ vdd rail', hooks: { V: [0, 0] },
+def('supply', { cat: 'Power', name: 'Supply (B+)', pre: 'PS', value: 'B+ 250 V', tags: 'b+ vdd rail', hooks: { V: [0, 0] },
   draw: () => ln(0, 0, 0, -12) + ln(-8, -12, 8, -12) });
-def('terminal', { cat: 'Connection', name: 'Terminal', pre: 'J', value: 'Input', tags: 'jack input output', hooks: { T: [0, 0] },
+def('supply_circle', { cat: 'Power', name: 'Supply (B+), circle', pre: 'PS', value: 'B+ 250 V', tags: 'b+ vdd rail terminal', hooks: { V: [0, 0] },
+  draw: () => ln(0, 0, 0, -12) + ci(0, -16, 4) });
+def('terminal', { cat: 'Power', name: 'Terminal', pre: 'J', value: 'Input', tags: 'jack input output', hooks: { T: [0, 0] },
   draw: () => ci(0, 0, 4) });
-def('fuse', { cat: 'Connection', name: 'Fuse', pre: 'F', value: '2 A', hooks: { 1: [0, 0], 2: [60, 0] },
+def('fuse', { cat: 'Misc', name: 'Fuse', pre: 'F', value: '2 A', hooks: { 1: [0, 0], 2: [60, 0] },
   draw: () => ln(0, 0, 15, 0) + `<rect class="ink" x="15" y="-6" width="30" height="12"/>` + ln(15, 0, 45, 0) + ln(45, 0, 60, 0) });
-def('switch', { cat: 'Connection', name: 'Switch', pre: 'S', value: 'SPST', hooks: { 1: [0, 0], 2: [40, 0] },
+def('switch', { cat: 'Misc', name: 'Switch', pre: 'S', value: 'SPST', hooks: { 1: [0, 0], 2: [40, 0] },
   draw: () => ln(0, 0, 10, 0) + ci(13, 0, 3) + ci(27, 0, 3) + ln(15, -2, 28, -11) + ln(30, 0, 40, 0) });
-def('lamp', { cat: 'Connection', name: 'Pilot lamp', pre: 'PL', value: '6.3 V', hooks: { 1: [0, 0], 2: [40, 0] },
+def('lamp', { cat: 'Misc', name: 'Pilot lamp', pre: 'PL', value: '6.3 V', hooks: { 1: [0, 0], 2: [40, 0] },
   draw: () => ln(0, 0, 10, 0) + ci(20, 0, 10) + pa('M13 0 C13 -8 27 -8 27 0 M17 0 C17 6 23 6 23 0') + ln(30, 0, 40, 0) });
-def('speaker', { cat: 'Connection', name: 'Speaker', pre: 'LS', value: '8 Ω', hooks: { 1: [0, 0], 2: [0, 20] },
+def('speaker', { cat: 'Misc', name: 'Speaker', pre: 'LS', value: '8 Ω', hooks: { 1: [0, 0], 2: [0, 20] },
   draw: () => ln(0, 0, 10, 0) + ln(0, 20, 10, 20) + `<rect class="ink" x="10" y="-5" width="8" height="30"/>` + pg([[18, -5], [32, -15], [32, 35], [18, 25]]) });
 
 /* ---- modern tubes (dashed grids, inverted-T plates, heaters left out) ---- */
@@ -591,7 +593,7 @@ for (const era of ['1930s', '1920s']) for (const ih of [false, true]) for (const
     value: PV[era][ih ? 'ih' : 'dh'][kind], tags: `vintage period zigzag ${era === '1930s' ? '1930 1936 2a3 45 56 27' : '1920 01-a 201a'}`,
     hooks: p.hooks, draw: p.draw });
 }
-const CATS = ['Passive', 'Tube, modern', 'Transformer', 'Heater', 'Connection', 'Tube, 1930s', 'Tube, 1920s'];
+const CATS = ['Passive', 'Tube, modern', 'Transformer', 'Heater', 'Power', 'Misc', 'Tube, 1930s', 'Tube, 1920s'];
 
 /* local bounding boxes, measured once */
 (function measure() {
@@ -642,7 +644,7 @@ function hooksOf(p) { return Object.entries(LIB[p.type].hooks).map(([name, h]) =
 const allHooks = () => sheet.parts.flatMap(hooksOf);
 function labelPos(p) {
   const bb = partBB(p);
-  if (p.type === 'supply' && !(p.rot % 2)) { const v = xf(p, [0, -18]); return [v[0] + (p.lx || 0), v[1] - 13 + (p.ly || 0), 'middle']; }
+  if ((p.type === 'supply' || p.type === 'supply_circle') && !(p.rot % 2)) { const v = xf(p, [0, p.type === 'supply' ? -18 : -24]); return [v[0] + (p.lx || 0), v[1] - 13 + (p.ly || 0), 'middle']; }
   return [bb[2] + 6 + (p.lx || 0), (bb[1] + bb[3]) / 2 - 4 + (p.ly || 0), 'start'];
 }
 const fieldShown = (p, f) => f === 'ref' ? p.showRef !== false : p.showVal !== false;

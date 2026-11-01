@@ -435,6 +435,10 @@ def('inductor_ct', { cat: 'Passive', name: 'Winding, center tap', pre: 'T', valu
   draw: () => ln(0, 0, 10, 0) + pa(coilX(10, 0, 4)) + ln(50, 0, 60, 0) + ln(30, 0, 30, 20) });
 def('diode', { cat: 'Semiconductors', name: 'Diode (solid-state)', pre: 'D', value: '1N4007', hooks: { A: [0, 0], K: [40, 0] },
   draw: () => ln(0, 0, 13, 0) + pg([[13, -8], [13, 8], [27, 0]]) + ln(27, -8, 27, 8) + ln(27, 0, 40, 0) });
+def('diode_schottky', { cat: 'Semiconductors', name: 'Schottky diode', pre: 'D', value: '1N5819', hooks: { A: [0, 0], K: [40, 0] },
+  draw: () => ln(0, 0, 13, 0) + pg([[13, -8], [13, 8], [27, 0]]) + pl([[31, 5], [31, 8], [27, 8], [27, -8], [23, -8], [23, -5]]) + ln(27, 0, 40, 0) });
+def('diode_zener', { cat: 'Semiconductors', name: 'Zener diode', pre: 'D', value: '1N4742A', hooks: { A: [0, 0], K: [40, 0] },
+  draw: () => ln(0, 0, 13, 0) + pg([[13, -8], [13, 8], [27, 0]]) + pl([[31, 11], [27, 8], [27, -8], [23, -11]]) + ln(27, 0, 40, 0) });
 
 /* ---- transformers ---- */
 function xfmr(pct, sct) {

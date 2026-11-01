@@ -640,7 +640,7 @@ function pmtBuild(n) {
     d += n % 2 ? ln(xn - 5, -7, xn + 5, -17) + ln(xn, -12, xn, -50)
                : ln(xn - 5, 7, xn + 5, 17) + ln(xn, 12, xn, 50);
     d += ln(xn + 18, -12, xn + 18, 12) + ln(xn + 18, 0, xn + 40, 0);                         // anode
-    return d + arrow(x0 - 22, -36, x0 - 8, -22) + arrow(x0 - 29, -25, x0 - 15, -11);          // light in at the upper left, onto the photocathode
+    return d + arrow(x0 - 27, -41, x0 - 13, -27) + arrow(x0 - 34, -30, x0 - 20, -16);          // light in at the upper left, onto the photocathode
   };
   return { hooks, draw };
 }

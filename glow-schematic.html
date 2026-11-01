@@ -453,6 +453,15 @@ def('npn', { cat: 'Semiconductors', name: 'NPN transistor', pre: 'Q', value: '2N
 def('pnp', { cat: 'Semiconductors', name: 'PNP transistor', pre: 'Q', value: '2N3906', tags: 'bjt bipolar', hooks: { B: [-30, 0], C: [10, -30], E: [10, 30] },
   draw: () => bjt([[0.3, 9.5], [3.6, 15.3], [6.9, 10.3]]) });
 
+// JFETs: gate on the left meeting the channel bar, drain up, source down; the gate arrow points
+// into the channel for N-channel and out of it for P-channel.
+const jfet = arrow => ci(2, 0, 18, 'env') + ln(-30, 0, -5, 0) + ln(-5, -12, -5, 12)
+  + pl([[-5, -8], [10, -8], [10, -30]]) + pl([[-5, 8], [10, 8], [10, 30]]) + pg(arrow, 'ink solid');
+def('njfet', { cat: 'Semiconductors', name: 'N-channel JFET', pre: 'Q', value: '2N5457', tags: 'jfet fet n channel', hooks: { G: [-30, 0], D: [10, -30], S: [10, 30] },
+  draw: () => jfet([[-6, 0], [-13, -3.5], [-13, 3.5]]) });
+def('pjfet', { cat: 'Semiconductors', name: 'P-channel JFET', pre: 'Q', value: '2N5460', tags: 'jfet fet p channel', hooks: { G: [-30, 0], D: [10, -30], S: [10, 30] },
+  draw: () => jfet([[-15, 0], [-8, -3.5], [-8, 3.5]]) });
+
 /* ---- transformers ---- */
 function xfmr(pct, sct) {
   let s = ln(0, 0, 10, 0) + ln(10, 0, 10, 10) + pa(coilY(10, 10, 4, 1)) + ln(10, 50, 10, 60) + ln(10, 60, 0, 60)

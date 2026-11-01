@@ -593,6 +593,8 @@ for (const era of ['1930s', '1920s']) for (const ih of [false, true]) for (const
     value: PV[era][ih ? 'ih' : 'dh'][kind], tags: `vintage period zigzag ${era === '1930s' ? '1930 1936 2a3 45 56 27' : '1920 01-a 201a'}`,
     hooks: p.hooks, draw: p.draw });
 }
+// tubes start with no value: the part number comes later (a fixed-tube section is planned); the designator is just V?
+for (const k in LIB) if (LIB[k].cat.startsWith('Tube')) LIB[k].value = '';
 const CATS = ['Passive', 'Tube, modern', 'Transformer', 'Heater', 'Power', 'Misc', 'Tube, 1930s', 'Tube, 1920s'];
 
 /* local bounding boxes, measured once */

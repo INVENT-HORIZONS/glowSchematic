@@ -481,7 +481,7 @@ def('m_diode_dh', { cat: 'Tube, modern', name: 'Diode, direct', pre: 'V', value:
 def('m_diode', { cat: 'Tube, modern', name: 'Diode', pre: 'V', value: '6H6', tags: '6al5 6h6 cathode no heater', hooks: { P: [0, -50], K: [-10, 50] },
   draw: () => ci(0, 0, 30, 'env') + ln(-12, -10, 12, -10) + ln(0, -10, 0, -50) + cath(-10, 12, 10, -10, 50) });
 def('m_diode_ih', { cat: 'Tube, modern', name: 'Diode, indirect', pre: 'V', value: '6H6', tags: '6al5 6h6 indirectly heated heater', hooks: { P: [0, -50], K: [-20, 50], H1: [-10, 50], H2: [10, 50] },
-  draw: () => ci(0, 0, 30, 'env') + ln(-12, -10, 12, -10) + ln(0, -10, 0, -50) + cath(-20, 14, 8, -20, 50)
+  draw: () => ci(0, 0, 30, 'env') + ln(-17, -10, 17, -10) + ln(0, -10, 0, -50) + cath(-20, 19, 8, -20, 50)
     + pa('M-10 50 V26 A10 10 0 0 1 10 26 V50', 'htr') });
 def('m_rect', { cat: 'Tube, modern', name: 'Full-wave rectifier', pre: 'V', value: '5Y3', tags: '5u4 80 5ar4 gz34', hooks: { P1: [-20, -50], P2: [20, -50], F1: [-10, 50], F2: [10, 50] },
   draw: () => pa(stadium(20, 30), 'env') + ln(-32, -10, -8, -10) + ln(8, -10, 32, -10) + ln(-20, -10, -20, -50) + ln(20, -10, 20, -50) + filV(8, 24, 50) });

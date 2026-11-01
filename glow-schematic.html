@@ -433,7 +433,7 @@ def('choke', { cat: 'Passive', name: 'Choke (iron core)', pre: 'L', value: '10 H
   draw: () => ln(0, 0, 10, 0) + pa(coilX(10, 0, 4)) + ln(50, 0, 60, 0) + ln(10, -9, 50, -9) + ln(10, -12, 50, -12) });
 def('inductor_ct', { cat: 'Passive', name: 'Winding, center tap', pre: 'T', value: '6.3 V CT', tags: 'heater winding secondary', hooks: { 1: [0, 0], 2: [60, 0], CT: [30, 20] },
   draw: () => ln(0, 0, 10, 0) + pa(coilX(10, 0, 4)) + ln(50, 0, 60, 0) + ln(30, 0, 30, 20) });
-def('diode', { cat: 'Passive', name: 'Diode (solid-state)', pre: 'D', value: '1N4007', hooks: { A: [0, 0], K: [40, 0] },
+def('diode', { cat: 'Semiconductors', name: 'Diode (solid-state)', pre: 'D', value: '1N4007', hooks: { A: [0, 0], K: [40, 0] },
   draw: () => ln(0, 0, 13, 0) + pg([[13, -8], [13, 8], [27, 0]]) + ln(27, -8, 27, 8) + ln(27, 0, 40, 0) });
 
 /* ---- transformers ---- */
@@ -597,7 +597,7 @@ for (const era of ['1930s', '1920s']) for (const ih of [false, true]) for (const
 }
 // tubes start with no value: the part number comes later (a fixed-tube section is planned); the designator is just V?
 for (const k in LIB) if (LIB[k].cat.startsWith('Tube')) LIB[k].value = '';
-const CATS = ['Passive', 'Tube, modern', 'Transformer', 'Heater', 'Power', 'Misc', 'Tube, 1930s', 'Tube, 1920s'];
+const CATS = ['Passive', 'Semiconductors', 'Tube, modern', 'Transformer', 'Heater', 'Power', 'Misc', 'Tube, 1930s', 'Tube, 1920s'];
 
 /* local bounding boxes, measured once */
 (function measure() {

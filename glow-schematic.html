@@ -618,6 +618,21 @@ def('m_gas_thyratron_t', { cat: 'Tube, modern', name: 'Thyratron, tetrode', pre:
     + ln(-20, 0, 20, 0, 'dash') + ln(-60, 0, -20, 0) + cath(-20, 22, 12, -20, 60)
     + pl([[-10, 60], [-10, 31], [0, 21], [10, 31], [10, 60]], 'htr') + gasDot(28, -18) });
 
+// Specialized tubes.
+// Photomultiplier: photocathode arc on the left, dynodes D1-D9 alternating bottom/top, anode bar on the right.
+const pmtDyn = () => { let d = ''; for (let i = 0; i < 9; i++) { const x = -40 + i * 10, top = i % 2 === 1; d += top ? ln(x - 4, -14, x + 4, -14) + ln(x, -14, x, -50) : ln(x - 4, 14, x + 4, 14) + ln(x, 14, x, 50); } return d; };
+const pmtHooks = (() => { const h = { K: [-80, 0] }; for (let i = 0; i < 9; i++) h['D' + (i + 1)] = [-40 + i * 10, i % 2 ? -50 : 50]; h.P = [80, 0]; return h; })();
+def('m_sp_pmt', { cat: 'Tube, modern', name: 'Photomultiplier', pre: 'V', value: '', tags: '931a 1p21 1p28 photomultiplier pmt photo dynode', hooks: pmtHooks,
+  draw: () => pa(stadium(42, 30), 'env') + pa('M -52 -18 A 24 24 0 0 0 -52 18') + ln(-80, 0, -60, 0) + pmtDyn() + ln(58, -12, 58, 12) + ln(58, 0, 80, 0)
+    + ln(-86, -48, -72, -34) + pg([[-70, -32], [-76, -34], [-72, -38]], 'ink solid') + ln(-76, -54, -62, -40) + pg([[-60, -38], [-66, -40], [-62, -44]], 'ink solid') });
+// Electron-ray tuning indicator: triode (plate bar over dashed grid) in the lower left, its plate tied to the
+// ray-control electrode (the short upright) and brought out on the right; target cone on top.
+def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator (eye)', pre: 'V', value: '', tags: '6e5 6u5 6af6 6g5 em34 em84 eye magic eye tuning indicator electron ray', hooks: { T: [0, -60], P: [60, 0], G: [-60, 10], K: [-20, 60], H1: [-10, 60], H2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env') + pa('M -28 -10 Q 0 -34 28 -10') + ln(0, -22, 0, -60)
+    + ln(-24, 0, -6, 0) + ln(-6, 0, 14, 0) + ln(14, -6, 14, 12) + ln(14, 0, 60, 0)
+    + ln(-24, 10, -6, 10, 'dash') + ln(-60, 10, -24, 10) + cath(-24, 22, 20, -20, 60)
+    + pl([[-10, 60], [-10, 36], [0, 28], [10, 36], [10, 60]], 'htr') });
+
 /* ---- period tubes for the Vintage Tube spotlight ---- */
 function period(era, kind, ih) {
   const n = { diode: 0, triode: 1, tetrode: 2, pentode: 3 }[kind];
@@ -1223,10 +1238,10 @@ function renderLib() {
     let body;
     if (cat === 'Tube, modern') {
       // filament (directly heated) tubes first, in their own group, then everything with a cathode
-      const isGas = L => /^m_gas/.test(L.type), vac = items.filter(L => !isGas(L)), gas = items.filter(isGas);
+      const isGas = L => /^m_gas/.test(L.type), isSp = L => /^m_sp_/.test(L.type), vac = items.filter(L => !isGas(L) && !isSp(L)), gas = items.filter(isGas), sp = items.filter(isSp);
       const direct = vac.filter(isDirect), withHtr = vac.filter(L => !isDirect(L) && /_ih$/.test(L.type)), kOnly = vac.filter(L => !isDirect(L) && !/_ih$/.test(L.type));
       const grp = (label, list) => list.length ? `<div class="subcat">${label}</div><div class="tiles">${list.map(tile).join('')}</div>` : '';
-      body = grp('Filament (direct)', direct) + grp('Cathode only', kOnly) + grp('Cathode + filament', withHtr) + grp('Gas-filled', gas);
+      body = grp('Filament (direct)', direct) + grp('Cathode only', kOnly) + grp('Cathode + filament', withHtr) + grp('Gas-filled', gas) + grp('Specialized', sp);
     } else if (cat === 'Semiconductors') {
       // diodes, then bipolar transistors, then FETs, each group starting a fresh row
       const dio = items.filter(L => /^diode/.test(L.type)), bjt = items.filter(L => /^(npn|pnp)/.test(L.type));

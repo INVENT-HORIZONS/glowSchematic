@@ -647,6 +647,14 @@ function pmtBuild(n) {
 }
 def('m_sp_pmt', Object.assign({ cat: 'Tube, modern', name: 'Photomultiplier', pre: 'V', value: '', tags: '931a 1p21 1p28 photomultiplier pmt photo dynode',
   vary: { key: 'dyn', label: 'Dynodes', min: 2, max: 14, def: 9, build: pmtBuild } }, pmtBuild(9)));
+// Single-section electron-ray indicator: green fluorescent target a at the top, a ray-control electrode b (fed from the
+// left, stepping down to its dashed vane), the grid g, the heavy cathode k and the heater. No triode section.
+def('m_sp_eye1', { cat: 'Tube, modern', name: 'Electron-ray indicator, single section', pre: 'V', value: '', tags: 'eye magic eye tuning indicator electron ray single section', hooks: { A: [0, -60], B: [-60, -20], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env') + pa('M -19 -26 Q 0 -34 20 -26', 'tgt') + ln(0, -60, 0, -30)
+    + pl([[-60, -20], [-6, -20], [-6, -10]]) + ln(-6, -10, 22, -10, 'dash')
+    + ln(-60, 0, -32, 0) + ln(-32, 0, 22, 0, 'dash')
+    + '<polyline class="ink" style="stroke-width:3" points="-18,21 -11,15 14,15 20,21"/>' + pl([[-18, 21], [-30, 33], [-30, 60]])
+    + pl([[-10, 60], [-10, 38], [0, 30], [10, 38], [10, 60]], 'htr') });
 // Electron-ray tuning indicator ("magic eye"), drawn to Larry's reference: target a (top right), triode plate
 // (top left), ray-control electrode b (upright, fed from the left), split grid g whose right half is tied
 // down to the heavy cathode k, and the heater below.
@@ -660,14 +668,6 @@ def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator, two sectio
     + pl([[-18, 21], [-30, 33], [-30, 60]])
     + pl([[-10, 60], [-10, 36], [0, 28], [10, 36], [10, 60]], 'htr') });
 
-// Single-section electron-ray indicator: green fluorescent target a at the top, a ray-control electrode b (fed from the
-// left, stepping down to its dashed vane), the grid g, the heavy cathode k and the heater. No triode section.
-def('m_sp_eye1', { cat: 'Tube, modern', name: 'Electron-ray indicator, single section', pre: 'V', value: '', tags: 'eye magic eye tuning indicator electron ray single section', hooks: { A: [0, -60], B: [-60, -20], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
-  draw: () => ci(0, 0, 40, 'env') + pa('M -19 -26 Q 0 -34 20 -26', 'tgt') + ln(0, -60, 0, -30)
-    + pl([[-60, -20], [-6, -20], [-6, -10]]) + ln(-6, -10, 22, -10, 'dash')
-    + ln(-60, 0, -32, 0) + ln(-32, 0, 22, 0, 'dash')
-    + '<polyline class="ink" style="stroke-width:3" points="-18,21 -11,15 14,15 20,21"/>' + pl([[-18, 21], [-30, 33], [-30, 60]])
-    + pl([[-10, 60], [-10, 38], [0, 30], [10, 38], [10, 60]], 'htr') });
 
 /* ---- period tubes for the Vintage Tube spotlight ---- */
 function period(era, kind, ih) {

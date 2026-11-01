@@ -649,7 +649,7 @@ def('m_sp_pmt', Object.assign({ cat: 'Tube, modern', name: 'Photomultiplier', pr
 // Electron-ray tuning indicator ("magic eye"), drawn to Larry's reference: target a (top right), triode plate
 // (top left), ray-control electrode b (upright, fed from the left), split grid g whose right half is tied
 // down to the heavy cathode k, and the heater below.
-def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator (eye)', pre: 'V', value: '', tags: '6e5 6u5 6af6 6g5 em34 em84 eye magic eye tuning indicator electron ray', hooks: { A: [20, -60], P: [-20, -60], B: [-60, -30], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
+def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator, two section', pre: 'V', value: '', tags: '6e5 6u5 6af6 6g5 em34 em84 eye magic eye tuning indicator electron ray', hooks: { A: [20, -60], P: [-20, -60], B: [-60, -30], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
   draw: () => ci(0, 0, 40, 'env')
     + ln(11, -28, 25, -28) + ln(20, -28, 20, -60)                                   // a: target
     + ln(-28, -14, -8, -14) + ln(-20, -14, -20, -60)                                // triode plate
@@ -658,6 +658,15 @@ def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator (eye)', pre
     + '<polyline class="ink" style="stroke-width:3" points="-18,21 -11,15 13,15 19,21"/>'               // k: heavy cathode
     + pl([[-18, 21], [-30, 33], [-30, 60]])
     + pl([[-10, 60], [-10, 36], [0, 28], [10, 36], [10, 60]], 'htr') });
+
+// Single-section electron-ray indicator: target lead a at the top, a ray-control electrode b (fed from the
+// left, stepping down to its dashed vane), the grid g, the heavy cathode k and the heater. No triode section.
+def('m_sp_eye1', { cat: 'Tube, modern', name: 'Electron-ray indicator, single section', pre: 'V', value: '', tags: 'eye magic eye tuning indicator electron ray single section', hooks: { A: [0, -60], B: [-60, -20], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env') + ln(0, -60, 0, -40)
+    + pl([[-60, -20], [-6, -20], [-6, -10]]) + ln(-6, -10, 22, -10, 'dash')
+    + ln(-60, 0, -32, 0) + ln(-32, 0, 22, 0, 'dash')
+    + '<polyline class="ink" style="stroke-width:3" points="-18,21 -11,15 14,15 20,21"/>' + pl([[-18, 21], [-30, 33], [-30, 60]])
+    + pl([[-10, 60], [-10, 38], [0, 30], [10, 38], [10, 60]], 'htr') });
 
 /* ---- period tubes for the Vintage Tube spotlight ---- */
 function period(era, kind, ih) {

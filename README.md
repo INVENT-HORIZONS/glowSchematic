@@ -6,7 +6,7 @@ Open `glow-schematic.html` in any modern browser. Everything is in the one file;
 
 ## Features
 
-- **Symbol library (78 parts):** passives, transformers (including ultra-linear and center-tapped), heaters, power, semiconductors (diodes, BJTs, Darlingtons, JFETs and MOSFETs), misc, modern tubes (including gas-filled rectifiers, glow regulators, thyratrons, a photomultiplier and an electron-ray "magic eye"), and 1920s and 1930s period tubes for the Vintage Tube spotlight.
+- **Symbol library (79 parts):** passives, transformers (including ultra-linear and center-tapped), heaters, power, semiconductors (diodes, BJTs, Darlingtons, JFETs and MOSFETs), misc, modern tubes (including gas-filled rectifiers, glow regulators, thyratrons, a photomultiplier and two- and single-section electron-ray "magic eyes"), and 1920s and 1930s period tubes for the Vintage Tube spotlight.
 - **Hooks on a 0.1 in grid:** every connection point lands on the grid, even after rotating or flipping. Ref des and value labels move on a finer 0.05 in grid.
 - **Wiring:** click a hook to start, click to add corners, and finish on a hook or wire. Space flips the corner. Junction dots appear automatically.
 - **Wire colors:** black, red, green, blue, brown and orange. Pick the color for new wires from the swatch under the Wire tool; recolor existing wires from the properties panel or the right-click menu.

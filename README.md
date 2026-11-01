@@ -29,7 +29,7 @@ Open `glow-schematic.html` in any modern browser. Everything is in the one file;
 
 ## Colors
 
-The sheet uses the newsletter's palette: paper `#FBF8F3`, ink `#17120E`, and glow `#E8912D` for heaters and filaments only. Wires are ink unless you color them.
+The sheet uses the newsletter's palette: paper `#FBF8F3`, ink `#17120E`, and glow `#E8912D` for heaters and filaments only, and phosphor green `#2F8A45` for the magic-eye targets. Wires are ink unless you color them.
 
 ## Keys
 

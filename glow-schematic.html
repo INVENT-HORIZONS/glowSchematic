@@ -188,7 +188,7 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
 .tile { display: grid; grid-template-rows: 46px auto; gap: 2px; align-items: center; justify-items: center; padding: 4px 3px 5px;
   border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); cursor: pointer; text-align: center; }
 .tile svg { width: 100%; height: 46px; }
-.tile svg .ink, .tile svg .env, .tile svg .htr, .tile svg .dash { vector-effect: non-scaling-stroke; stroke-width: .75px; }
+.tile svg .ink, .tile svg .env, .tile svg .htr, .tile svg .dash, .tile svg .tgt { vector-effect: non-scaling-stroke; stroke-width: .75px; }
 .tile svg .dash { stroke-dasharray: 2 1.4; }
 .tile span { font-size: 10.5px; line-height: 1.2; }
 .tile:hover { border-color: var(--accent); }
@@ -229,6 +229,7 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
 .env { stroke: var(--ink); fill: none; stroke-width: 1.8; }
 .solid { fill: var(--ink); }
 .htr { stroke: var(--glow); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tgt { stroke: #2F8A45; fill: none; stroke-width: 1.8; stroke-linecap: round; }
 .dash { stroke: var(--ink); fill: none; stroke-width: 1.6; stroke-dasharray: 5 3.4; }
 .wire { stroke: var(--ink); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .wire-hit { stroke: transparent; fill: none; stroke-width: 10; }
@@ -651,18 +652,18 @@ def('m_sp_pmt', Object.assign({ cat: 'Tube, modern', name: 'Photomultiplier', pr
 // down to the heavy cathode k, and the heater below.
 def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator, two section', pre: 'V', value: '', tags: '6e5 6u5 6af6 6g5 em34 em84 eye magic eye tuning indicator electron ray', hooks: { A: [20, -60], P: [-20, -60], B: [-60, -30], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
   draw: () => ci(0, 0, 40, 'env')
-    + ln(11, -28, 25, -28) + ln(20, -28, 20, -60)                                   // a: target
+    + pa('M 11 -24 Q 20 -33 29 -23', 'tgt') + ln(20, -28, 20, -60)                   // a: green fluorescent target
     + ln(-28, -14, -8, -14) + ln(-20, -14, -20, -60)                                // triode plate
-    + ln(10, -22, 10, -4) + pl([[-60, -30], [-2, -30], [-2, -16], [10, -16]])       // b: ray-control electrode
+    + ln(10, -20, 10, -4) + pl([[-60, -30], [-2, -30], [-2, -16], [10, -16]])       // b: ray-control electrode
     + ln(-60, 0, -36, 0) + ln(-36, 0, -6, 0, 'dash') + ln(10, 0, 34, 0, 'dash') + ln(34, 0, 19, 21)   // g, right half tied to k
     + '<polyline class="ink" style="stroke-width:3" points="-18,21 -11,15 13,15 19,21"/>'               // k: heavy cathode
     + pl([[-18, 21], [-30, 33], [-30, 60]])
     + pl([[-10, 60], [-10, 36], [0, 28], [10, 36], [10, 60]], 'htr') });
 
-// Single-section electron-ray indicator: target lead a at the top, a ray-control electrode b (fed from the
+// Single-section electron-ray indicator: green fluorescent target a at the top, a ray-control electrode b (fed from the
 // left, stepping down to its dashed vane), the grid g, the heavy cathode k and the heater. No triode section.
 def('m_sp_eye1', { cat: 'Tube, modern', name: 'Electron-ray indicator, single section', pre: 'V', value: '', tags: 'eye magic eye tuning indicator electron ray single section', hooks: { A: [0, -60], B: [-60, -20], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
-  draw: () => ci(0, 0, 40, 'env') + ln(0, -60, 0, -40)
+  draw: () => ci(0, 0, 40, 'env') + pa('M -19 -26 Q 0 -34 20 -26', 'tgt') + ln(0, -60, 0, -30)
     + pl([[-60, -20], [-6, -20], [-6, -10]]) + ln(-6, -10, 22, -10, 'dash')
     + ln(-60, 0, -32, 0) + ln(-32, 0, 22, 0, 'dash')
     + '<polyline class="ink" style="stroke-width:3" points="-18,21 -11,15 14,15 20,21"/>' + pl([[-18, 21], [-30, 33], [-30, 60]])
@@ -2076,7 +2077,7 @@ function sheetSVG(withBg = true, whole = false) {
   let x0, y0, x1, y1;
   if (whole) { const [SW, SH] = sheetDims(sheet); x0 = 0; y0 = 0; x1 = SW; y1 = SH; }
   else { if (!bbs.length) return null; const pad = 16; x0 = Math.min(...bbs.map(b => b[0])) - pad; y0 = Math.min(...bbs.map(b => b[1])) - pad; x1 = Math.max(...bbs.map(b => b[2])) + pad; y1 = Math.max(...bbs.map(b => b[3])) + pad; }
-  const css = `.ink{stroke:#17120E;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.solid{fill:#17120E}.env{stroke:#17120E;fill:none;stroke-width:1.8}.htr{stroke:#E8912D;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.dash{stroke:#17120E;fill:none;stroke-width:1.6;stroke-dasharray:5 3.4}.wire{stroke:#17120E;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.jdot{fill:#17120E}.lbl{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:11px;fill:#17120E}.lbl .ref,.lbl.ref{font-weight:600}.pinno{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:8.5px;fill:#17120E}.pinlead{stroke:#5C5248;stroke-width:.8;stroke-dasharray:1.2 2;fill:none}.stxt{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;white-space:pre}.fr{stroke:#17120E;fill:none;stroke-width:1.1}.fr-b{stroke:#17120E;fill:none;stroke-width:2}.fr-lab{font-family:'JetBrains Mono',Consolas,monospace;font-size:7.5px;letter-spacing:.08em;fill:#5C5248}.fr-val{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;fill:#17120E}.fr-zone{font-family:'JetBrains Mono',Consolas,monospace;font-size:10px;fill:#5C5248}.fr-co{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-weight:800;fill:#17120E}`;
+  const css = `.ink{stroke:#17120E;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.solid{fill:#17120E}.tgt{stroke:#2F8A45;fill:none;stroke-width:1.8;stroke-linecap:round}.env{stroke:#17120E;fill:none;stroke-width:1.8}.htr{stroke:#E8912D;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.dash{stroke:#17120E;fill:none;stroke-width:1.6;stroke-dasharray:5 3.4}.wire{stroke:#17120E;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.jdot{fill:#17120E}.lbl{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:11px;fill:#17120E}.lbl .ref,.lbl.ref{font-weight:600}.pinno{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:8.5px;fill:#17120E}.pinlead{stroke:#5C5248;stroke-width:.8;stroke-dasharray:1.2 2;fill:none}.stxt{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;white-space:pre}.fr{stroke:#17120E;fill:none;stroke-width:1.1}.fr-b{stroke:#17120E;fill:none;stroke-width:2}.fr-lab{font-family:'JetBrains Mono',Consolas,monospace;font-size:7.5px;letter-spacing:.08em;fill:#5C5248}.fr-val{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;fill:#17120E}.fr-zone{font-family:'JetBrains Mono',Consolas,monospace;font-size:10px;fill:#5C5248}.fr-co{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-weight:800;fill:#17120E}`;
   const body = ((whole ? $('layerFrame').innerHTML : '') + $('layerParts').innerHTML + $('layerWires').innerHTML + $('layerText').innerHTML).replace(/var\(--ink\)/g, '#17120E').replace(/var\(--paper\)/g, '#FBF8F3');
   return { w: x1 - x0, h: y1 - y0, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" width="${x1 - x0}" height="${y1 - y0}"><style>${css}</style>${withBg ? `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="#FBF8F3"/>` : ''}${body}</svg>` };
 }

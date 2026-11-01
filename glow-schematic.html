@@ -646,12 +646,17 @@ function pmtBuild(n) {
 }
 def('m_sp_pmt', Object.assign({ cat: 'Tube, modern', name: 'Photomultiplier', pre: 'V', value: '', tags: '931a 1p21 1p28 photomultiplier pmt photo dynode',
   vary: { key: 'dyn', label: 'Dynodes', min: 2, max: 14, def: 9, build: pmtBuild } }, pmtBuild(9)));
-// Electron-ray tuning indicator: triode (plate bar over dashed grid) in the lower left, its plate tied to the
-// ray-control electrode (the short upright) and brought out on the right; target cone on top.
-def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator (eye)', pre: 'V', value: '', tags: '6e5 6u5 6af6 6g5 em34 em84 eye magic eye tuning indicator electron ray', hooks: { T: [0, -60], P: [60, 0], G: [-60, 10], K: [-20, 60], H1: [-10, 60], H2: [10, 60] },
-  draw: () => ci(0, 0, 40, 'env') + pa('M -28 -10 Q 0 -34 28 -10') + ln(0, -22, 0, -60)
-    + ln(-24, 0, -6, 0) + ln(-6, 0, 14, 0) + ln(14, -6, 14, 12) + ln(14, 0, 60, 0)
-    + ln(-24, 10, -6, 10, 'dash') + ln(-60, 10, -24, 10) + cath(-24, 22, 20, -20, 60)
+// Electron-ray tuning indicator ("magic eye"), drawn to Larry's reference: target a (top right), triode plate
+// (top left), ray-control electrode b (upright, fed from the left), split grid g whose right half is tied
+// down to the heavy cathode k, and the heater below.
+def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator (eye)', pre: 'V', value: '', tags: '6e5 6u5 6af6 6g5 em34 em84 eye magic eye tuning indicator electron ray', hooks: { A: [20, -60], P: [-20, -60], B: [-60, -30], G: [-60, 0], K: [-30, 60], H1: [-10, 60], H2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env')
+    + ln(11, -28, 25, -28) + ln(20, -28, 20, -60)                                   // a: target
+    + ln(-28, -14, -8, -14) + ln(-20, -14, -20, -60)                                // triode plate
+    + ln(10, -22, 10, -4) + pl([[-60, -30], [-2, -30], [-2, -16], [10, -16]])       // b: ray-control electrode
+    + ln(-60, 0, -36, 0) + ln(-36, 0, -6, 0, 'dash') + ln(10, 0, 34, 0, 'dash') + ln(34, 0, 19, 21)   // g, right half tied to k
+    + '<polyline class="ink" style="stroke-width:3" points="-18,21 -11,15 13,15 19,21"/>'               // k: heavy cathode
+    + pl([[-18, 21], [-30, 33], [-30, 60]])
     + pl([[-10, 60], [-10, 36], [0, 28], [10, 36], [10, 60]], 'htr') });
 
 /* ---- period tubes for the Vintage Tube spotlight ---- */

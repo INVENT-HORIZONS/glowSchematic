@@ -476,10 +476,13 @@ def('speaker', { cat: 'Connection', name: 'Speaker', pre: 'LS', value: '8 Ω', h
 /* ---- modern tubes (dashed grids, inverted-T plates, heaters left out) ---- */
 const cath = (x1, x2, y, lx, ly) => ln(x1, y, x2, y) + ln(x2, y, x2, y + 5) + ln(lx, y, lx, ly);   // inverted L + lead
 const filV = (apex, legY, end, x = 10) => pl([[-x, end], [-x, legY], [0, apex], [x, legY], [x, end]], 'htr');
-def('m_diode', { cat: 'Tube, modern', name: 'Diode', pre: 'V', value: '6H6', tags: '6al5 6h6 indirectly heated', hooks: { P: [0, -50], K: [-10, 50] },
-  draw: () => ci(0, 0, 30, 'env') + ln(-12, -10, 12, -10) + ln(0, -10, 0, -50) + cath(-10, 12, 10, -10, 50) });
-def('m_diode_dh', { cat: 'Tube, modern', name: 'Diode, filament', pre: 'V', value: '81', tags: 'directly heated', hooks: { P: [0, -50], F1: [-10, 50], F2: [10, 50] },
+def('m_diode_dh', { cat: 'Tube, modern', name: 'Diode, direct', pre: 'V', value: '81', tags: 'directly heated filament', hooks: { P: [0, -50], F1: [-10, 50], F2: [10, 50] },
   draw: () => ci(0, 0, 30, 'env') + ln(-12, -8, 12, -8) + ln(0, -8, 0, -50) + filV(6, 24, 50) });
+def('m_diode', { cat: 'Tube, modern', name: 'Diode', pre: 'V', value: '6H6', tags: '6al5 6h6 cathode no heater', hooks: { P: [0, -50], K: [-10, 50] },
+  draw: () => ci(0, 0, 30, 'env') + ln(-12, -10, 12, -10) + ln(0, -10, 0, -50) + cath(-10, 12, 10, -10, 50) });
+def('m_diode_ih', { cat: 'Tube, modern', name: 'Diode, indirect', pre: 'V', value: '6H6', tags: '6al5 6h6 indirectly heated heater', hooks: { P: [0, -50], K: [-10, 50], H1: [0, 50], H2: [10, 50] },
+  draw: () => ci(0, 0, 30, 'env') + ln(-12, -10, 12, -10) + ln(0, -10, 0, -50) + cath(-10, 12, 10, -10, 50)
+    + pa('M0 50 V24 A5 5 0 0 1 10 24 V50', 'htr') });
 def('m_rect', { cat: 'Tube, modern', name: 'Full-wave rectifier', pre: 'V', value: '5Y3', tags: '5u4 80 5ar4 gz34', hooks: { P1: [-20, -50], P2: [20, -50], F1: [-10, 50], F2: [10, 50] },
   draw: () => pa(stadium(20, 30), 'env') + ln(-32, -10, -8, -10) + ln(8, -10, 32, -10) + ln(-20, -10, -20, -50) + ln(20, -10, 20, -50) + filV(8, 24, 50) });
 def('m_triode', { cat: 'Tube, modern', name: 'Triode', pre: 'V', value: '6J5', tags: '12ax7 half 6sn7', hooks: { P: [0, -50], G: [-50, 0], K: [-10, 50] },

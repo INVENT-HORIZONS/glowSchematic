@@ -7,12 +7,12 @@ Open `glow-schematic.html` in any modern browser. Everything is in the one file;
 ## Features
 
 - **Symbol library (61 parts):** passives, transformers (including ultra-linear and center-tapped), heaters, power, semiconductors, misc, modern tubes, and 1920s and 1930s period tubes for the Vintage Tube spotlight.
-- **Hooks on a 0.1 in grid:** every connection point lands on the grid, even after rotating or mirroring. Ref des and value labels move on a finer 0.05 in grid.
+- **Hooks on a 0.1 in grid:** every connection point lands on the grid, even after rotating or flipping. Ref des and value labels move on a finer 0.05 in grid.
 - **Wiring:** click a hook to start, click to add corners, and finish on a hook or wire. Space flips the corner. Junction dots appear automatically.
 - **Editing:**
   - Drag parts and the wires follow.
   - Drag a wire segment to move it.
-  - Right-click to rotate, mirror or delete.
+  - Right-click to rotate, flip horizontal, flip vertical or delete.
   - Double-click a part, its ref des or its value to edit.
   - Delete on a selected label hides it instead of deleting anything.
 - **Pin numbers on tubes:** right-click a tube and choose Show pin numbers. Each hook gets a `p?` label you can double-click to edit (Tab moves to the next pin) and drag anywhere; a moved label is tied back to its pin with a dotted line.
@@ -34,7 +34,7 @@ The sheet uses the newsletter's palette: paper `#FBF8F3`, ink `#17120E`, and glo
 | Key | Action |
 | --- | --- |
 | V / W / T / C / S | Select, Wire, Text, Cut, Snip |
-| R / X | Rotate, mirror |
+| R / X / Y | Rotate, flip horizontal, flip vertical |
 | Del | Delete the selection (hides a selected label) |
 | Ctrl+Z / Ctrl+Y | Undo, redo |
 | Ctrl+C / Ctrl+V / Ctrl+D | Copy, paste, duplicate |

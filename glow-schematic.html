@@ -301,7 +301,8 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
     <button class="tb" id="bRedo" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 7l5 5-5 5"/><path d="M20 12H10a6 6 0 0 0 0 12h2" transform="translate(0 -5)"/></svg></button>
     <span class="sep"></span>
     <button class="tb" id="bRot" title="Rotate 90° (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg><span class="k">R</span></button>
-    <button class="tb" id="bFlip" title="Mirror (X)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3v18" stroke-dasharray="2 2"/><path d="M9 7L3 17h6zM15 7l6 10h-6z"/></svg><span class="k">X</span></button>
+    <button class="tb" id="bFlip" title="Flip horizontal (X)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3v18" stroke-dasharray="2 2"/><path d="M9 7L3 17h6zM15 7l6 10h-6z"/></svg><span class="k">X</span></button>
+    <button class="tb" id="bFlipV" title="Flip vertical (Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 12h18" stroke-dasharray="2 2"/><path d="M7 9L17 3v6zM7 15l10 6v-6z"/></svg><span class="k">Y</span></button>
     <button class="tb" id="bDel" title="Delete the selection (Del)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="k">Del</span></button>
     <span class="sep"></span>
     <button class="tb" id="bZo" title="Zoom out (−)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M7.5 10.5h6"/></svg></button>
@@ -1130,7 +1131,7 @@ $('lib').addEventListener('click', e => { const t = e.target.closest('[data-type
 $('search').addEventListener('input', renderLib);
 $('search').addEventListener('keydown', e => e.stopPropagation());
 
-function armPlace(type) { placeType = type; placeRot = 0; placeFlip = false; setMode('place'); renderLib(); setMsg(`Placing ${LIB[type].name}. Click to drop; R rotates, X mirrors, Esc stops.`); }
+function armPlace(type) { placeType = type; placeRot = 0; placeFlip = false; setMode('place'); renderLib(); setMsg(`Placing ${LIB[type].name}. Click to drop; R rotates, X/Y flip, Esc stops.`); }
 
 function renderProps() {
   const b = $('propBody'), items = selItems();
@@ -1148,7 +1149,7 @@ function renderProps() {
       <div class="field"><label for="pVal">Value</label><input type="text" id="pVal" value="${esc(p.value)}"></div>
       <div class="field"><label>Show</label><span style="display:flex;gap:12px;flex-wrap:wrap"><label style="display:flex;gap:5px;align-items:center;color:inherit"><input type="checkbox" id="pShowR"${fieldShown(p, 'ref') ? ' checked' : ''}> ref des</label><label style="display:flex;gap:5px;align-items:center;color:inherit"><input type="checkbox" id="pShowV"${fieldShown(p, 'value') ? ' checked' : ''}> value</label></span></div>
       <div class="pins">Hooks: ${esc(pins)}</div>
-      <div class="row-btns"><button data-act="rot">Rotate</button><button data-act="flip">Mirror</button><button data-act="dup">Duplicate</button>${(p.lx || p.ly || p.rdx || p.rdy || p.vdx || p.vdy) ? '<button data-act="lreset">Reset labels</button>' : ''}<button class="del" data-act="del">Delete</button></div>`;
+      <div class="row-btns"><button data-act="rot">Rotate</button><button data-act="flip">Flip H</button><button data-act="flipv">Flip V</button><button data-act="dup">Duplicate</button>${(p.lx || p.ly || p.rdx || p.rdy || p.vdx || p.vdy) ? '<button data-act="lreset">Reset labels</button>' : ''}<button class="del" data-act="del">Delete</button></div>`;
     const bind = (id, f) => { const e = $(id); if (!e) return; e.addEventListener('focus', () => snapshot(), { once: true }); e.addEventListener('input', () => { f(e); render(); changedSoon(); }); e.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') e.blur(); }); };
     bind('pRef', e => p.ref = e.value); bind('pVal', e => p.value = e.value);
     $('pShowR').onchange = e => { snapshot(); p.showRef = e.target.checked; render(); changed(); };
@@ -1173,7 +1174,7 @@ function renderProps() {
 }
 $('propBody').addEventListener('click', e => {
   const a = e.target.closest('[data-act]'); if (!a) return;
-  ({ rot: rotateSel, flip: flipSel, dup: duplicate, del: deleteSel, lreset: () => { snapshot(); for (const it of selItems()) if (it.k === 'part') { Object.assign(it.o, { lx: 0, ly: 0, rdx: 0, rdy: 0, vdx: 0, vdy: 0 }); } render(); changed(); } })[a.dataset.act]();
+  ({ rot: rotateSel, flip: () => flipSel('h'), flipv: () => flipSel('v'), dup: duplicate, del: deleteSel, lreset: () => { snapshot(); for (const it of selItems()) if (it.k === 'part') { Object.assign(it.o, { lx: 0, ly: 0, rdx: 0, rdy: 0, vdx: 0, vdy: 0 }); } render(); changed(); } })[a.dataset.act]();
 });
 
 /* =====================================================================
@@ -1193,7 +1194,7 @@ function redo() { if (!redoStack.length) return; undoStack.push(JSON.stringify(p
 function updateButtons() {
   $('bUndo').disabled = !undoStack.length; $('bRedo').disabled = !redoStack.length;
   const any = sel.size > 0;
-  $('bDel').disabled = !any; $('bFlip').disabled = !selItems().some(i => i.k === 'part') && mode !== 'place';
+  $('bDel').disabled = !any; $('bFlip').disabled = $('bFlipV').disabled = !selItems().some(i => i.k === 'part') && mode !== 'place';
   $('bRot').disabled = !selItems().some(i => i.k === 'part') && mode !== 'place';
 }
 
@@ -1253,16 +1254,24 @@ function rotateSel() {
   }
   finishWires(); render(); changed();
 }
-function flipSel() {
-  if (mode === 'place') { placeFlip = !placeFlip; renderOver(); return; }
+// Flip horizontal ('h') or vertical ('v') in sheet space. The part is redrawn reversed in place:
+// it mirrors about the centre of its own hooks, so a two-ended part keeps its footprint and its
+// ends trade places. Wires stay where they are wherever a hook still lands; other hooks drag theirs.
+function flipOrient(rot, flip, axis) { return { rot: ((axis === 'h' ? 4 : 6) - (rot || 0)) % 4, flip: !flip }; }
+function flipSel(axis = 'h') {
+  if (mode === 'place') { const o = flipOrient(placeRot, placeFlip, axis); placeRot = o.rot; placeFlip = o.flip; renderOver(); return; }
   const parts = selItems().filter(i => i.k === 'part'); if (!parts.length) return;
   snapshot();
   for (const it of parts) {
     const p = it.o, before = hooksOf(p).map(h => h.pos);
-    p.flip = !p.flip;
-    const after = hooksOf(p).map(h => h.pos), moves = new Map();
-    before.forEach((b, i) => moves.set(key(b), [after[i][0] - b[0], after[i][1] - b[1]]));
-    dragWiresWithHooks(moves);
+    const xs = before.map(b => b[0]), ys = before.map(b => b[1]);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    Object.assign(p, flipOrient(p.rot, p.flip, axis));
+    // reflecting about the part origin puts the hook centre at 2*origin - c; shift it back to c
+    if (axis === 'h') p.x += 2 * (cx - p.x); else p.y += 2 * (cy - p.y);
+    const after = hooksOf(p).map(h => h.pos), still = new Set(after.map(key)), moves = new Map();
+    before.forEach((b, i) => { if (!still.has(key(b))) moves.set(key(b), [after[i][0] - b[0], after[i][1] - b[1]]); });
+    if (moves.size) dragWiresWithHooks(moves);
   }
   finishWires(); render(); changed();
 }
@@ -1577,7 +1586,7 @@ function partMenu(e, raw) {
   const what = items.length > 1 ? `${items.length} items` : items[0].k === 'part' ? (items[0].o.ref || LIB[items[0].o.type].name) : items[0].k === 'wire' ? 'Wire' : 'Text';
   menuEl = document.createElement('div'); menuEl.className = 'menu'; menuEl.setAttribute('role', 'menu');
   menuEl.innerHTML = `<div style="padding:5px 10px 6px;font:500 10.5px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">${esc(what)}</div>`
-    + (hasPart ? `<button role="menuitem" data-m="rot"><span>Rotate 90°</span><span>R</span></button><button role="menuitem" data-m="flip"><span>Mirror</span><span>X</span></button>` : '')
+    + (hasPart ? `<button role="menuitem" data-m="rot"><span>Rotate 90°</span><span>R</span></button><button role="menuitem" data-m="flip"><span>Flip horizontal</span><span>X</span></button><button role="menuitem" data-m="flipv"><span>Flip vertical</span><span>Y</span></button>` : '')
     + (selLabel ? `<button role="menuitem" data-m="edit"><span>Edit ${FIELD_NAME[selLabel.field]}</span><span>dbl-click</span></button>` : '')
     + (items.length === 1 && items[0].k === 'part' ? ['ref', 'value'].filter(f => !fieldShown(items[0].o, f)).map(f => `<button role="menuitem" data-m="show-${f}"><span>Show ${FIELD_NAME[f]}</span><span></span></button>`).join('') : '')
     + (items.length === 1 && items[0].k === 'part' && isTube(items[0].o) ? `<button role="menuitem" data-m="pins"><span>${items[0].o.showPins ? 'Hide' : 'Show'} pin numbers</span><span></span></button>` : '')
@@ -1595,7 +1604,7 @@ function partMenu(e, raw) {
     if (m === 'editpin') { editPin(t.o, t.pin); return; }
     if (m === 'resetpin') { snapshot(); const pn = t.o.pins[t.pin]; pn.dx = 0; pn.dy = 0; render(); changed(); return; }
     if (m.startsWith('show-')) { const q = items[0].o; snapshot(); if (m === 'show-ref') q.showRef = true; else q.showVal = true; render(); changed(); return; }
-    ({ rot: rotateSel, flip: flipSel, dup: duplicate, del: deleteSel })[m](); };
+    ({ rot: rotateSel, flip: () => flipSel('h'), flipv: () => flipSel('v'), dup: duplicate, del: deleteSel })[m](); };
   menuEl.addEventListener('keydown', ev => {
     const bs = [...menuEl.querySelectorAll('button')], i = bs.indexOf(document.activeElement);
     if (ev.key === 'Escape') { closeMenu(); ev.stopPropagation(); }
@@ -1681,12 +1690,12 @@ function finishDraft() {
    ===================================================================== */
 const MODE_LABEL = { select: 'Select', wire: 'Wire', text: 'Text', place: 'Place', cut: 'Cut', snip: 'Snip' };
 const HINT = {
-  select: '<b>Drag</b> to move · <b>Click a hook</b> to wire · <b>Double-click</b> a part or its label to edit · <b>Right-click</b> to rotate, mirror or delete · wheel zooms, Shift+wheel pans up/down, Alt+wheel pans left/right',
+  select: '<b>Drag</b> to move · <b>Click a hook</b> to wire · <b>Double-click</b> a part or its label to edit · <b>Right-click</b> to rotate, flip or delete · wheel zooms, Shift+wheel pans up/down, Alt+wheel pans left/right',
   wire: '<b>Click</b> to add corners · end on a <b>hook</b> or wire · <b>Space</b> flips the corner · <b>Backspace</b> removes the last corner · <b>Esc</b> cancels',
   text: '<b>Click</b> on the sheet to add text',
   snip: '<b>Click</b> a wire segment to cut just that segment · parts and text are deleted · click a ref des or value to hide it · <b>Esc</b> back to Select',
   cut: '<b>Click</b> a part, wire or text to delete it · click a ref des or value to hide it · <b>Ctrl+Z</b> undoes · <b>Esc</b> back to Select',
-  place: '<b>Click</b> to drop the part · <b>R</b> rotate · <b>X</b> mirror · <b>Esc</b> stop placing',
+  place: '<b>Click</b> to drop the part · <b>R</b> rotate · <b>X</b> flip H · <b>Y</b> flip V · <b>Esc</b> stop placing',
 };
 function setMode(m) {
   if (mode === 'wire' && m !== 'wire' && wireDraft) finishDraft();
@@ -1700,7 +1709,7 @@ $('mWire').onclick = () => setMode('wire');
 $('mText').onclick = () => setMode('text');
 $('mCut').onclick = () => setMode(mode === 'cut' ? 'select' : 'cut');
 $('mSnip').onclick = () => setMode(mode === 'snip' ? 'select' : 'snip');
-$('bRot').onclick = rotateSel; $('bFlip').onclick = flipSel; $('bDel').onclick = deleteSel;
+$('bRot').onclick = rotateSel; $('bFlip').onclick = () => flipSel('h'); $('bFlipV').onclick = () => flipSel('v'); $('bDel').onclick = deleteSel;
 $('bUndo').onclick = undo; $('bRedo').onclick = redo;
 $('bZi').onclick = () => zoomAt(null, 1.25); $('bZo').onclick = () => zoomAt(null, 0.8); $('bFit').onclick = fit;
 $('bGrid').onclick = () => { showGrid = !showGrid; $('bGrid').setAttribute('aria-pressed', showGrid); applyView(); lsSet('gs.grid', showGrid); };
@@ -1739,7 +1748,7 @@ document.addEventListener('keydown', e => {
   if (k === '/' && wireDraft) { wireDraft.hv = !wireDraft.hv; renderOver(); return; }
   if (k === 'enter' && wireDraft) { finishDraft(); return; }
   if (k === 'v') setMode('select'); else if (k === 'w') setMode('wire'); else if (k === 't') setMode('text'); else if (k === 'c') setMode(mode === 'cut' ? 'select' : 'cut'); else if (k === 's') setMode(mode === 'snip' ? 'select' : 'snip');
-  else if (k === 'r') rotateSel(); else if (k === 'x') flipSel(); else if (k === 'f') (e.shiftKey ? fitDrawing() : fit());
+  else if (k === 'r') rotateSel(); else if (k === 'x') flipSel('h'); else if (k === 'y') flipSel('v'); else if (k === 'f') (e.shiftKey ? fitDrawing() : fit());
   else if (k === 'g') $('bGrid').click(); else if (k === 'h') $('bHooks').click();
   else if (k === '+' || k === '=') zoomAt(null, 1.25); else if (k === '-') zoomAt(null, 0.8);
   else if (k.startsWith('arrow') && sel.size) {

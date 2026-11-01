@@ -1211,9 +1211,10 @@ function renderLib() {
       const grp = (label, list) => list.length ? `<div class="subcat">${label}</div><div class="tiles">${list.map(tile).join('')}</div>` : '';
       body = grp('Filament (direct)', direct) + grp('Cathode only', kOnly) + grp('Cathode + filament', withHtr);
     } else if (cat === 'Semiconductors') {
-      // diodes on their own row(s); transistors start a fresh row underneath
-      const dio = items.filter(L => /^diode/.test(L.type)), xtr = items.filter(L => !/^diode/.test(L.type));
-      body = [dio, xtr].filter(l => l.length).map(l => `<div class="tiles">${l.map(tile).join('')}</div>`).join('');
+      // diodes, then bipolar transistors, then FETs, each group starting a fresh row
+      const dio = items.filter(L => /^diode/.test(L.type)), bjt = items.filter(L => /^(npn|pnp)/.test(L.type));
+      const fet = items.filter(L => !dio.includes(L) && !bjt.includes(L));
+      body = [dio, bjt, fet].filter(l => l.length).map(l => `<div class="tiles">${l.map(tile).join('')}</div>`).join('');
     } else body = `<div class="tiles">${items.map(tile).join('')}</div>`;
     return `<details class="cat" data-cat="${cat}"${open}><summary>${cat}<small>${items.length}</small></summary>${body}</details>`;
   }).join('') || `<p class="props empty" style="padding:8px">No part matches “${esc(q)}”.</p>`;

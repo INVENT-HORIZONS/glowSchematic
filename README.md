@@ -6,7 +6,7 @@ Open `glow-schematic.html` in any modern browser. Everything is in the one file;
 
 ## Features
 
-- **Symbol library (54 parts):** passives, transformers (including ultra-linear and center-tapped), heaters, connections, modern tubes, and 1920s and 1930s period tubes for the Vintage Tube spotlight.
+- **Symbol library (55 parts):** passives, transformers (including ultra-linear and center-tapped), heaters, connections, modern tubes, and 1920s and 1930s period tubes for the Vintage Tube spotlight.
 - **Hooks on a 0.1 in grid:** every connection point lands on the grid, even after rotating or mirroring. Ref des and value labels move on a finer 0.05 in grid.
 - **Wiring:** click a hook to start, click to add corners, and finish on a hook or wire. Space flips the corner. Junction dots appear automatically.
 - **Editing:**

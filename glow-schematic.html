@@ -230,6 +230,8 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
 .wire { stroke: var(--ink); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .wire-hit { stroke: transparent; fill: none; stroke-width: 10; }
 .jdot { fill: var(--ink); }
+.pinno { font-family: "Libre Franklin", sans-serif; font-size: 8.5px; fill: var(--ink); }
+.pinlead { stroke: #5C5248; stroke-width: .8; stroke-dasharray: 1.2 2; fill: none; }
 .lbl { font-family: "Libre Franklin", sans-serif; font-size: 11px; fill: var(--ink); }
 .lbl .ref, .lbl.ref { font-weight: 600; }
 .stxt { font-family: "Libre Franklin", sans-serif; fill: var(--ink); white-space: pre; }
@@ -810,6 +812,29 @@ function partSVG(p, extra = '') {
   const L = LIB[p.type];
   return `<g transform="translate(${p.x} ${p.y}) rotate(${(p.rot || 0) * 90}) scale(${p.flip ? -1 : 1} 1)"${extra}>${L.draw()}</g>`;
 }
+/* ---- pin numbers on tubes: one editable, movable label per hook ---- */
+const isTube = p => LIB[p.type].cat.startsWith('Tube');
+function pinGeom(p) {
+  if (!p.showPins) return [];
+  const bb = partBB(p), cx = (bb[0] + bb[2]) / 2, cy = (bb[1] + bb[3]) / 2, out = [];
+  const all = Object.entries(LIB[p.type].hooks).map(([n, h]) => [n, xf(p, h)]);
+  for (const [name, [hx, hy]] of all) {
+    let ux = hx - cx, uy = hy - cy;
+    if (Math.abs(ux) >= Math.abs(uy)) { ux = Math.sign(ux) || 1; uy = 0; } else { uy = Math.sign(uy) || 1; ux = 0; }   // along the lead
+    const pin = (p.pins && p.pins[name]) || {}, t = pin.t != null ? pin.t : 'p?';
+    // leads leaving the top or bottom: the leftmost hook in the row labels on its left, the others on their right,
+    // so closely spaced hooks (cathode and heater) never overprint; side leads label just above the lead
+    const leftmost = uy && all.every(([, q]) => q[1] !== hy || q[0] >= hx);
+    const bx = hx - ux * 12 + (uy ? (leftmost ? -7 : 7) : 0), by = hy - uy * 12 + (ux ? -6 : 0);
+    const x = bx + (pin.dx || 0), y = by + (pin.dy || 0), w = Math.max(String(t).length * 5.4, 8);
+    out.push({ name, t, x, y, hx, hy, moved: !!(pin.dx || pin.dy), x0: x - w / 2 - 1, x1: x + w / 2 + 1, top: y - 7, bottom: y + 3 });
+  }
+  return out;
+}
+function pinSVG(p) {
+  return pinGeom(p).map(g => (g.moved ? `<line class="pinlead" x1="${g.hx}" y1="${g.hy}" x2="${g.x}" y2="${g.y + (g.y < g.hy ? 2 : -7)}"/>` : '')
+    + `<text class="pinno" x="${g.x}" y="${g.y}" text-anchor="middle"${editing && editing.p === p && editing.field === 'pin:' + g.name ? ' visibility="hidden"' : ''}>${esc(g.t)}</text>`).join('');
+}
 function labelSVG(p) {
   return labelLines(p).map(l => `<text class="lbl${l.field === 'ref' ? ' ref' : ''}" x="${l.x}" y="${l.y}" text-anchor="${l.a === 'middle' ? 'middle' : 'start'}"${editing && editing.p === p && editing.field === l.field ? ' visibility="hidden"' : ''}>${esc(l.field === 'ref' ? p.ref || '' : p.value || '')}</text>`).join('');
 }
@@ -840,7 +865,7 @@ function connectivity() {
 }
 function render() {
   $('layerFrame').innerHTML = frameSVG(sheet);
-  $('layerParts').innerHTML = sheet.parts.map(p => partSVG(p) + labelSVG(p)).join('');
+  $('layerParts').innerHTML = sheet.parts.map(p => partSVG(p) + labelSVG(p) + pinSVG(p)).join('');
   const cnt = connectivity();
   let ws = sheet.wires.map(w => `<polyline class="wire" points="${w.pts.map(p => p.join(',')).join(' ')}"/>`).join('');
   const dots = new Set();
@@ -877,6 +902,7 @@ let cutHover = null;
 function cutAt(raw, segOnly) {
   const t = hit(raw); cutHover = null;
   if (!t) { setMsg('Nothing to cut here. Click a part, a wire or some text.'); renderOver(); return; }
+  if (t.k === 'pin') { setMsg('Pin numbers are turned off from the part\'s right-click menu.'); return; }
   if (t.k === 'label') { hideLabel(t.o.id, t.field); renderOver(); return; }
   snapshot();
   let what;
@@ -1283,6 +1309,10 @@ function distSeg(p, a, b) {
 function hit(p) {
   const tol = 5 / view.z + 1;
   for (let i = sheet.texts.length - 1; i >= 0; i--) { const b = textBB(sheet.texts[i]); if (p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3]) return { k: 'text', o: sheet.texts[i] }; }
+  for (let i = sheet.parts.length - 1; i >= 0; i--) {   // pin numbers
+    const q = sheet.parts[i];
+    for (const g of pinGeom(q)) if (p[0] >= g.x0 - 1 && p[0] <= g.x1 + 1 && p[1] >= g.top - 1 && p[1] <= g.bottom + 1) return { k: 'pin', o: q, pin: g.name };
+  }
   for (let i = sheet.parts.length - 1; i >= 0; i--) {   // label lines
     const q = sheet.parts[i];
     for (const l of labelLines(q)) if (p[0] >= l.x0 - 2 && p[0] <= l.x1 + 2 && p[1] >= l.top - 1 && p[1] <= l.bottom + 1) return { k: 'label', o: q, field: l.field };
@@ -1323,6 +1353,11 @@ svg.addEventListener('pointerdown', e => {
   }
   selLabel = null;
   if (target && target.k === 'label') { selLabel = { id: target.o.id, field: target.field }; }
+  if (target.k === 'pin') {
+    snapshot(); const q = target.o; q.pins = q.pins || {}; const pn = q.pins[target.pin] = q.pins[target.pin] || {};
+    if (!sel.has(q.id)) { sel.clear(); sel.add(q.id); renderSel(); }
+    drag = { kind: 'pin', o: q, pin: target.pin, start: [snapL(raw[0]), snapL(raw[1])], ox: pn.dx || 0, oy: pn.dy || 0, moved: false }; return;
+  }
   if (target.k === 'label') { snapshot(); const k = target.field === 'ref' ? 'r' : 'v'; if (!sel.has(target.o.id)) { sel.clear(); sel.add(target.o.id); renderSel(); } renderSel(); drag = { kind: 'label', o: target.o, k, start: [snapL(raw[0]), snapL(raw[1])], ox: target.o[k + 'dx'] || 0, oy: target.o[k + 'dy'] || 0, moved: false }; return; }
   const id = target.o.id;
   if (e.shiftKey) { sel.has(id) ? sel.delete(id) : sel.add(id); renderSel(); return; }
@@ -1361,6 +1396,7 @@ svg.addEventListener('pointermove', e => {
       setMsg(best ? `${drag.which === 'tb' ? 'Title block' : 'Revision chart'} sticks to the ${CORNERS[best]} corner` : `${drag.which === 'tb' ? 'Title block' : 'Revision chart'} placed freely. Drag near a corner to stick it there.`);
       return;
     }
+    else if (drag.kind === 'pin') { const dx = snapL(raw[0]) - drag.start[0], dy = snapL(raw[1]) - drag.start[1]; if (dx || dy) drag.moved = true; const pn = drag.o.pins[drag.pin]; pn.dx = drag.ox + dx; pn.dy = drag.oy + dy; render(); }
     else if (drag.kind === 'label') { const dx = snapL(raw[0]) - drag.start[0], dy = snapL(raw[1]) - drag.start[1]; if (dx || dy) drag.moved = true; drag.o[drag.k + 'dx'] = drag.ox + dx; drag.o[drag.k + 'dy'] = drag.oy + dy; render(); }
     else if (drag.kind === 'seg') {
       const pts = drag.pts.map(q => [...q]);
@@ -1383,7 +1419,7 @@ svg.addEventListener('pointerup', e => {
   if (panning) { panning = null; $('view').classList.remove('panning'); return; }
   if (drag) {
     if (drag.kind === 'block') { const moved = drag.moved; drag = null; if (moved) { render(); changed(); } return; }
-    if ((drag.kind === 'move' || drag.kind === 'label') && !drag.moved) undoStack.pop();
+    if ((drag.kind === 'move' || drag.kind === 'label' || drag.kind === 'pin') && !drag.moved) undoStack.pop();
     if (drag.kind === 'seg') { if (drag.w.pts.length === drag.pts.length && drag.w.pts.every((q, i) => q[0] === drag.pts[i][0] && q[1] === drag.pts[i][1])) { drag.w.pts = simplify(drag.pts); undoStack.pop(); } else drag.w.pts = simplify(drag.w.pts); }
     finishWires(); drag = null; render(); changed(); return;
   }
@@ -1414,6 +1450,7 @@ function onDouble(raw) {
     if (inBox(tbox.title) || inBox(tbox.revs)) { $('docSec').open = true; docFocus = inBox(tbox.revs) ? null : 'dPart'; renderDoc(); if (inBox(tbox.revs)) { const q = $('dRevList').querySelector('input'); (q || $('dAddRev')).focus(); } $('docSec').scrollIntoView({ block: 'nearest' }); }
     return;
   }
+  if (t.k === 'pin') { editPin(t.o, t.pin); return; }
   if (t.k === 'label') { editInPlace(t.o, t.field); return; }
   if (t.k === 'part') { partDialog(t.o); return; }
   if (t.k === 'text') { const f = $('tTxt'); if (f) { f.focus(); f.select(); } }
@@ -1452,10 +1489,29 @@ function editInPlace(p, field) {
   inp.addEventListener('input', () => { inp.style.width = Math.max(70, (inp.value.length + 4) * 6.6 * view.z) + 'px'; });
   inp.addEventListener('blur', () => finishEdit(true));
 }
+function editPin(p, name) {
+  closeMenu(); finishEdit(false);
+  const g = pinGeom(p).find(x => x.name === name); if (!g) return;
+  editing = { p, field: 'pin:' + name }; render();
+  const r = svg.getBoundingClientRect(), vr = $('view').getBoundingClientRect();
+  const inp = document.createElement('input');
+  inp.className = 'inplace'; inp.value = g.t; inp.setAttribute('aria-label', 'Pin number for ' + name);
+  const w = Math.max(44, (g.t.length + 3) * 6.5 * view.z);
+  Object.assign(inp.style, { left: (r.left - vr.left + view.x + g.x * view.z - w / 2) + 'px', top: (r.top - vr.top + view.y + g.top * view.z - 4) + 'px', width: w + 'px', fontSize: Math.max(10, 9 * view.z) + 'px' });
+  $('view').appendChild(inp); editing.inp = inp; inp.focus(); inp.select();
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') finishEdit(true); if (e.key === 'Escape') finishEdit(false);
+    if (e.key === 'Tab') { e.preventDefault(); const names = Object.keys(LIB[p.type].hooks), i = names.indexOf(name); finishEdit(true); editPin(p, names[(i + (e.shiftKey ? names.length - 1 : 1)) % names.length]); } });
+  inp.addEventListener('blur', () => finishEdit(true));
+}
 function finishEdit(ok) {
   if (!editing) return;
   const { p, field, inp } = editing; editing = null;
   if (inp) inp.remove();
+  if (field.startsWith('pin:')) {
+    const n = field.slice(4); p.pins = p.pins || {}; const pn = p.pins[n] = p.pins[n] || {};
+    if (ok && inp && inp.value.trim() !== (pn.t != null ? pn.t : 'p?')) { snapshot(); pn.t = inp.value.trim() || 'p?'; changed(); setMsg(`Pin ${n} set to ${pn.t}`); }
+    render(); return;
+  }
   if (ok && inp && inp.value !== (p[field] || '')) { snapshot(); p[field] = inp.value.trim(); changed(); setMsg(`${field === 'ref' ? 'Designator' : 'Value'} set to ${p[field] || '(blank)'}`); }
   render();
 }
@@ -1520,6 +1576,8 @@ function partMenu(e, raw) {
     + (hasPart ? `<button role="menuitem" data-m="rot"><span>Rotate 90°</span><span>R</span></button><button role="menuitem" data-m="flip"><span>Mirror</span><span>X</span></button>` : '')
     + (selLabel ? `<button role="menuitem" data-m="edit"><span>Edit ${FIELD_NAME[selLabel.field]}</span><span>dbl-click</span></button>` : '')
     + (items.length === 1 && items[0].k === 'part' ? ['ref', 'value'].filter(f => !fieldShown(items[0].o, f)).map(f => `<button role="menuitem" data-m="show-${f}"><span>Show ${FIELD_NAME[f]}</span><span></span></button>`).join('') : '')
+    + (items.length === 1 && items[0].k === 'part' && isTube(items[0].o) ? `<button role="menuitem" data-m="pins"><span>${items[0].o.showPins ? 'Hide' : 'Show'} pin numbers</span><span></span></button>` : '')
+    + (t.k === 'pin' ? `<button role="menuitem" data-m="editpin"><span>Edit pin number</span><span>dbl-click</span></button>` + (((t.o.pins || {})[t.pin] || {}).dx || ((t.o.pins || {})[t.pin] || {}).dy ? `<button role="menuitem" data-m="resetpin"><span>Put pin number back</span><span></span></button>` : '') : '')
     + `<button role="menuitem" data-m="dup"><span>Duplicate</span><span>Ctrl+D</span></button>`
     + (selLabel ? `<button role="menuitem" data-m="del"><span>Hide ${FIELD_NAME[selLabel.field]}</span><span>Del</span></button>`
                 : `<button role="menuitem" data-m="del" style="color:var(--danger)"><span>Delete${many}</span><span>Del</span></button>`);
@@ -1529,6 +1587,9 @@ function partMenu(e, raw) {
   menuEl.style.top = Math.min(e.clientY, window.innerHeight - mh - 8) + 'px';
   menuEl.onclick = ev => { const b = ev.target.closest('[data-m]'); if (!b) return; const m = b.dataset.m; closeMenu();
     if (m === 'edit') { const L0 = selLabel; if (L0) editInPlace(sheet.parts.find(x => x.id === L0.id), L0.field); return; }
+    if (m === 'pins') { const q = items[0].o; snapshot(); q.showPins = !q.showPins; if (q.showPins) { q.pins = q.pins || {}; for (const n of Object.keys(LIB[q.type].hooks)) q.pins[n] = q.pins[n] || { t: 'p?' }; } render(); changed(); setMsg(q.showPins ? 'Pin numbers shown. Double-click one to edit it; drag it to move it.' : 'Pin numbers hidden. Their text is kept.'); return; }
+    if (m === 'editpin') { editPin(t.o, t.pin); return; }
+    if (m === 'resetpin') { snapshot(); const pn = t.o.pins[t.pin]; pn.dx = 0; pn.dy = 0; render(); changed(); return; }
     if (m.startsWith('show-')) { const q = items[0].o; snapshot(); if (m === 'show-ref') q.showRef = true; else q.showVal = true; render(); changed(); return; }
     ({ rot: rotateSel, flip: flipSel, dup: duplicate, del: deleteSel })[m](); };
   menuEl.addEventListener('keydown', ev => {
@@ -1808,7 +1869,7 @@ function sheetSVG(withBg = true, whole = false) {
   let x0, y0, x1, y1;
   if (whole) { const [SW, SH] = sheetDims(sheet); x0 = 0; y0 = 0; x1 = SW; y1 = SH; }
   else { if (!bbs.length) return null; const pad = 16; x0 = Math.min(...bbs.map(b => b[0])) - pad; y0 = Math.min(...bbs.map(b => b[1])) - pad; x1 = Math.max(...bbs.map(b => b[2])) + pad; y1 = Math.max(...bbs.map(b => b[3])) + pad; }
-  const css = `.ink{stroke:#17120E;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.env{stroke:#17120E;fill:none;stroke-width:1.8}.htr{stroke:#E8912D;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.dash{stroke:#17120E;fill:none;stroke-width:1.6;stroke-dasharray:5 3.4}.wire{stroke:#17120E;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.jdot{fill:#17120E}.lbl{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:11px;fill:#17120E}.lbl .ref,.lbl.ref{font-weight:600}.stxt{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;white-space:pre}.fr{stroke:#17120E;fill:none;stroke-width:1.1}.fr-b{stroke:#17120E;fill:none;stroke-width:2}.fr-lab{font-family:'JetBrains Mono',Consolas,monospace;font-size:7.5px;letter-spacing:.08em;fill:#5C5248}.fr-val{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;fill:#17120E}.fr-zone{font-family:'JetBrains Mono',Consolas,monospace;font-size:10px;fill:#5C5248}.fr-co{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-weight:800;fill:#17120E}`;
+  const css = `.ink{stroke:#17120E;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.env{stroke:#17120E;fill:none;stroke-width:1.8}.htr{stroke:#E8912D;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.dash{stroke:#17120E;fill:none;stroke-width:1.6;stroke-dasharray:5 3.4}.wire{stroke:#17120E;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.jdot{fill:#17120E}.lbl{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:11px;fill:#17120E}.lbl .ref,.lbl.ref{font-weight:600}.pinno{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:8.5px;fill:#17120E}.pinlead{stroke:#5C5248;stroke-width:.8;stroke-dasharray:1.2 2;fill:none}.stxt{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;white-space:pre}.fr{stroke:#17120E;fill:none;stroke-width:1.1}.fr-b{stroke:#17120E;fill:none;stroke-width:2}.fr-lab{font-family:'JetBrains Mono',Consolas,monospace;font-size:7.5px;letter-spacing:.08em;fill:#5C5248}.fr-val{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;fill:#17120E}.fr-zone{font-family:'JetBrains Mono',Consolas,monospace;font-size:10px;fill:#5C5248}.fr-co{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-weight:800;fill:#17120E}`;
   const body = ((whole ? $('layerFrame').innerHTML : '') + $('layerParts').innerHTML + $('layerWires').innerHTML + $('layerText').innerHTML).replace(/var\(--ink\)/g, '#17120E').replace(/var\(--paper\)/g, '#FBF8F3');
   return { w: x1 - x0, h: y1 - y0, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" width="${x1 - x0}" height="${y1 - y0}"><style>${css}</style>${withBg ? `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="#FBF8F3"/>` : ''}${body}</svg>` };
 }

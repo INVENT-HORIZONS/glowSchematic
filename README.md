@@ -15,6 +15,7 @@ Open `glow-schematic.html` in any modern browser. Everything is in the one file;
   - Right-click to rotate, mirror or delete.
   - Double-click a part, its ref des or its value to edit.
   - Delete on a selected label hides it instead of deleting anything.
+- **Pin numbers on tubes:** right-click a tube and choose Show pin numbers. Each hook gets a `p?` label you can double-click to edit (Tab moves to the next pin) and drag anywhere; a moved label is tied back to its pin with a dotted line.
 - **Toolbox:** Select (V), Wire (W), Text (T), Cut (C, removes a whole part or wire) and Snip (S, removes one wire segment).
 - **Sheets:** ANSI A (Letter), B (Tabloid), C and D, portrait or landscape, with mixed sizes in one project. Each sheet can have:
   - A zoned border.

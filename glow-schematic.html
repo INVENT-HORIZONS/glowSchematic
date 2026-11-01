@@ -233,6 +233,13 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
 .wire { stroke: var(--ink); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .wire-hit { stroke: transparent; fill: none; stroke-width: 10; }
 .jdot { fill: var(--ink); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0 2px; }
+.sw, .menu button.sw { width: 20px; height: 20px; flex: none; display: block; padding: 0; border-radius: 50%; border: 2px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.sw[aria-pressed="true"], .menu button.sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+.sw:hover, .sw:focus-visible, .menu button.sw:hover, .menu button.sw:focus-visible { box-shadow: 0 0 0 2px var(--accent); outline: none; }
+.menu .swatches { padding: 2px 10px 8px; }
+.menu .mlabel { padding: 5px 10px 4px; font: 500 10.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .pinno { font-family: "Libre Franklin", sans-serif; font-size: 8.5px; fill: var(--ink); }
 .pinlead { stroke: #5C5248; stroke-width: .8; stroke-dasharray: 1.2 2; fill: none; }
 .lbl { font-family: "Libre Franklin", sans-serif; font-size: 11px; fill: var(--ink); }
@@ -368,6 +375,7 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
     <span class="tlabel">Tools</span>
     <button class="tool" id="mSelect" title="Select and move (V)" aria-label="Select" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><span class="k">V</span></button>
     <button class="tool" id="mWire" title="Draw a wire (W). Or click any hook." aria-label="Wire" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="18" r="2"/><path d="M6 18h6V6h6"/><circle cx="20" cy="6" r="2"/></svg><span class="k">W</span></button>
+    <button class="tool" id="mWColor" title="Wire color" aria-label="Wire color" aria-haspopup="menu"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path id="mWColorLine" d="M4 17h6V7h10" stroke="#17120E" stroke-width="3"/></svg></button>
     <button class="tool" id="mText" title="Add text (T)" aria-label="Text" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span class="k">T</span></button>
     <hr>
     <button class="tool" id="mCut" title="Cut: click a part, wire or text to delete it (C)" aria-label="Cut" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.6 7.6L20 18M8.6 16.4L20 6"/></svg><span class="k">C</span></button>
@@ -916,15 +924,45 @@ function connectivity() {
   for (const [k, p] of pts) for (const w of sheet.wires) for (let i = 0; i < w.pts.length - 1; i++) if (onSegInterior(p, w.pts[i], w.pts[i + 1])) add(p, 2);
   return cnt;
 }
+/* ---- wire colors ---- */
+const WIRE_COLORS = [
+  { k: 'ink', name: 'Black (signal)', c: '#17120E' }, { k: 'red', name: 'Red (power)', c: '#A3241B' },
+  { k: 'green', name: 'Green (ground)', c: '#2E6B34' }, { k: 'blue', name: 'Blue', c: '#1F4E8C' },
+  { k: 'brown', name: 'Brown', c: '#7A4A22' }, { k: 'orange', name: 'Orange', c: '#C2571A' }];
+const wcol = k => (WIRE_COLORS.find(c => c.k === k) || WIRE_COLORS[0]).c;
+const wstyle = w => w.color && w.color !== 'ink' ? ` style="stroke:${wcol(w.color)}"` : '';
+let drawColor = WIRE_COLORS.some(c => c.k === lsGet('gs.wirecolor', 'ink')) ? lsGet('gs.wirecolor', 'ink') : 'ink';
+const swatchRow = cur => `<div class="swatches" role="group" aria-label="Wire color">${WIRE_COLORS.map(c => `<button class="sw" data-wc="${c.k}" title="${c.name}" aria-label="${c.name}" aria-pressed="${c.k === cur}" style="background:${c.c}"></button>`).join('')}</div>`;
+function showDrawColor() { $('mWColorLine').setAttribute('stroke', wcol(drawColor)); $('mWColor').title = `Wire color for new wires: ${WIRE_COLORS.find(c => c.k === drawColor).name}`; }
+function colorWires(k) {   // recolor the selected wires
+  const ws = selItems().filter(i => i.k === 'wire').map(i => i.o); if (!ws.length) return false;
+  snapshot(); for (const w of ws) { if (k === 'ink') delete w.color; else w.color = k; }
+  render(); changed(); setMsg(`${ws.length === 1 ? 'Wire' : ws.length + ' wires'} set to ${WIRE_COLORS.find(c => c.k === k).name.split(' ')[0].toLowerCase()}`); return true;
+}
+function setDrawColor(k) { drawColor = k; lsSet('gs.wirecolor', k); showDrawColor(); }
+function wireColorMenu(btn) {
+  closeMenu();
+  menuEl = document.createElement('div'); menuEl.className = 'menu'; menuEl.setAttribute('role', 'menu'); menuEl.style.minWidth = '0';
+  const n = selItems().filter(i => i.k === 'wire').length;
+  menuEl.innerHTML = `<div class="mlabel">Wire color</div>${swatchRow(drawColor)}<div style="padding:0 10px 6px;font-size:11px;color:var(--muted);max-width:170px">New wires use this color${n ? `; the ${n} selected wire${n > 1 ? 's' : ''} change too` : ''}.</div>`;
+  document.body.appendChild(menuEl);
+  const r = btn.getBoundingClientRect();
+  menuEl.style.left = Math.max(8, r.left - menuEl.offsetWidth - 6) + 'px'; menuEl.style.top = Math.min(r.top, window.innerHeight - menuEl.offsetHeight - 8) + 'px';
+  menuEl.onclick = ev => { const b = ev.target.closest('[data-wc]'); if (!b) return; setDrawColor(b.dataset.wc); colorWires(b.dataset.wc); closeMenu(); };
+  menuEl.querySelector(`[data-wc="${drawColor}"]`).focus();
+  menuEl.addEventListener('keydown', ev => { if (ev.key === 'Escape') { closeMenu(); ev.stopPropagation(); } });
+}
+
 function render() {
   $('layerFrame').innerHTML = frameSVG(sheet);
   $('layerParts').innerHTML = sheet.parts.map(p => partSVG(p) + labelSVG(p) + pinSVG(p)).join('');
   const cnt = connectivity();
-  let ws = sheet.wires.map(w => `<polyline class="wire" points="${w.pts.map(p => p.join(',')).join(' ')}"/>`).join('');
+  let ws = sheet.wires.map(w => `<polyline class="wire"${wstyle(w)} points="${w.pts.map(p => p.join(',')).join(' ')}"/>`).join('');
   const dots = new Set();
   for (const w of sheet.wires) for (const e of [w.pts[0], w.pts[w.pts.length - 1]]) if ((cnt.get(key(e)) || 0) >= 3) dots.add(key(e));
   for (const h of allHooks()) if ((cnt.get(key(h.pos)) || 0) >= 3 && sheet.wires.some(w => [w.pts[0], w.pts.at(-1)].some(e => key(e) === key(h.pos)))) dots.add(key(h.pos));
-  ws += [...dots].map(k => { const [x, y] = k.split(','); return `<circle class="jdot" cx="${x}" cy="${y}" r="3"/>`; }).join('');
+  const dotColor = k => { const w = sheet.wires.find(w => w.color && w.pts.some(q => key(q) === k)); return w ? ` style="fill:${wcol(w.color)}"` : ''; };
+  ws += [...dots].map(k => { const [x, y] = k.split(','); return `<circle class="jdot"${dotColor(k)} cx="${x}" cy="${y}" r="3"/>`; }).join('');
   $('layerWires').innerHTML = ws;
   $('layerText').innerHTML = sheet.texts.map(textSVG).join('');
   renderSel(); renderHooks(cnt); renderDoc(); applyView();
@@ -964,8 +1002,8 @@ function cutAt(raw, segOnly) {
     // cut one segment: what is left on either side stays as its own wire
     const a = t.o.pts.slice(0, t.seg + 1), b = t.o.pts.slice(t.seg + 1);
     const i = sheet.wires.indexOf(t.o), keep = [];
-    if (a.length >= 2) keep.push({ id: t.o.id, pts: a });
-    if (b.length >= 2) keep.push({ id: uid(), pts: b });
+    if (a.length >= 2) keep.push({ ...t.o, pts: a });
+    if (b.length >= 2) keep.push({ ...t.o, id: uid(), pts: b });
     sheet.wires.splice(i, 1, ...keep); what = 'one wire segment';
   }
   else if (t.k === 'wire') { sheet.wires = sheet.wires.filter(w => w !== t.o); what = segOnly ? 'one wire segment' : 'wire'; }
@@ -989,7 +1027,7 @@ function renderOver() {
   }
   if (mode === 'wire') {
     s += `<line class="cursor-x" x1="${mouse[0] - 6}" y1="${mouse[1]}" x2="${mouse[0] + 6}" y2="${mouse[1]}"/><line class="cursor-x" x1="${mouse[0]}" y1="${mouse[1] - 6}" x2="${mouse[0]}" y2="${mouse[1] + 6}"/>`;
-    if (wireDraft) { const pts = draftPreview(); s += `<polyline class="wire" points="${wireDraft.pts.map(p => p.join(',')).join(' ')}"/><polyline class="preview" points="${pts.map(p => p.join(',')).join(' ')}"/>`; }
+    if (wireDraft) { const pts = draftPreview(); s += `<polyline class="wire"${wstyle({ color: drawColor })} points="${wireDraft.pts.map(p => p.join(',')).join(' ')}"/><polyline class="preview" points="${pts.map(p => p.join(',')).join(' ')}"/>`; }
   }
   if (band) s += `<rect class="band" x="${Math.min(band.a[0], band.b[0])}" y="${Math.min(band.a[1], band.b[1])}" width="${Math.abs(band.b[0] - band.a[0])}" height="${Math.abs(band.b[1] - band.a[1])}"/>`;
   $('layerOver').innerHTML = s;
@@ -1190,6 +1228,7 @@ function renderProps() {
   if (!items.length) { b.innerHTML = `<div class="empty">Select a part, wire or text to edit it. Click a part in the library to place it; click any hook to start a wire.</div>`; return; }
   if (items.length > 1) {
     b.innerHTML = `<div class="what">${items.length} items selected<small>${items.filter(i => i.k === 'part').length} parts · ${items.filter(i => i.k === 'wire').length} wires · ${items.filter(i => i.k === 'text').length} texts</small></div>
+      ${items.some(i => i.k === 'wire') ? `<div class="field"><label>Wire color</label>${swatchRow((() => { const cs = new Set(items.filter(i => i.k === 'wire').map(i => i.o.color || 'ink')); return cs.size === 1 ? [...cs][0] : ''; })())}</div>` : ''}
       <div class="row-btns"><button data-act="rot">Rotate</button><button data-act="dup">Duplicate</button><button class="del" data-act="del">Delete</button></div>`; return;
   }
   const it = items[0];
@@ -1209,6 +1248,7 @@ function renderProps() {
   } else if (it.k === 'wire') {
     const w = it.o, len = w.pts.slice(1).reduce((a, p, i) => a + Math.abs(p[0] - w.pts[i][0]) + Math.abs(p[1] - w.pts[i][1]), 0);
     b.innerHTML = `<div class="what">Wire<small>${w.pts.length - 1} segment${w.pts.length > 2 ? 's' : ''} · ${len / G} grid units</small></div>
+      <div class="field"><label>Color</label>${swatchRow(w.color || 'ink')}</div>
       <div class="empty">Drag a segment to move it; the ends stay put. Drag with Shift held to move the whole wire.</div>
       <div class="row-btns"><button class="del" data-act="del">Delete</button></div>`;
   } else {
@@ -1225,6 +1265,7 @@ function renderProps() {
   }
 }
 $('propBody').addEventListener('click', e => {
+  const wc = e.target.closest('[data-wc]'); if (wc) { colorWires(wc.dataset.wc); return; }
   const a = e.target.closest('[data-act]'); if (!a) return;
   ({ rot: rotateSel, flip: () => flipSel('h'), flipv: () => flipSel('v'), dup: duplicate, del: deleteSel, lreset: () => { snapshot(); for (const it of selItems()) if (it.k === 'part') { Object.assign(it.o, { lx: 0, ly: 0, rdx: 0, rdy: 0, vdx: 0, vdy: 0 }); } render(); changed(); } })[a.dataset.act]();
 });
@@ -1643,6 +1684,7 @@ function partMenu(e, raw) {
     + (items.length === 1 && items[0].k === 'part' ? ['ref', 'value'].filter(f => !fieldShown(items[0].o, f)).map(f => `<button role="menuitem" data-m="show-${f}"><span>Show ${FIELD_NAME[f]}</span><span></span></button>`).join('') : '')
     + (items.length === 1 && items[0].k === 'part' && isTube(items[0].o) ? `<button role="menuitem" data-m="pins"><span>${items[0].o.showPins ? 'Hide' : 'Show'} pin numbers</span><span></span></button>` : '')
     + (t.k === 'pin' ? `<button role="menuitem" data-m="editpin"><span>Edit pin number</span><span>dbl-click</span></button>` + (((t.o.pins || {})[t.pin] || {}).dx || ((t.o.pins || {})[t.pin] || {}).dy ? `<button role="menuitem" data-m="resetpin"><span>Put pin number back</span><span></span></button>` : '') : '')
+    + (items.some(i => i.k === 'wire') ? `<div class="mlabel">Wire color</div>${swatchRow((() => { const cs = new Set(items.filter(i => i.k === 'wire').map(i => i.o.color || 'ink')); return cs.size === 1 ? [...cs][0] : ''; })())}` : '')
     + `<button role="menuitem" data-m="dup"><span>Duplicate</span><span>Ctrl+D</span></button>`
     + (selLabel ? `<button role="menuitem" data-m="del"><span>Hide ${FIELD_NAME[selLabel.field]}</span><span>Del</span></button>`
                 : `<button role="menuitem" data-m="del" style="color:var(--danger)"><span>Delete${many}</span><span>Del</span></button>`);
@@ -1650,7 +1692,8 @@ function partMenu(e, raw) {
   const mw = menuEl.offsetWidth, mh = menuEl.offsetHeight;
   menuEl.style.left = Math.min(e.clientX, window.innerWidth - mw - 8) + 'px';
   menuEl.style.top = Math.min(e.clientY, window.innerHeight - mh - 8) + 'px';
-  menuEl.onclick = ev => { const b = ev.target.closest('[data-m]'); if (!b) return; const m = b.dataset.m; closeMenu();
+  menuEl.onclick = ev => { const wc = ev.target.closest('[data-wc]'); if (wc) { closeMenu(); colorWires(wc.dataset.wc); return; }
+    const b = ev.target.closest('[data-m]'); if (!b) return; const m = b.dataset.m; closeMenu();
     if (m === 'edit') { const L0 = selLabel; if (L0) editInPlace(sheet.parts.find(x => x.id === L0.id), L0.field); return; }
     if (m === 'pins') { const q = items[0].o; snapshot(); q.showPins = !q.showPins; if (q.showPins) { q.pins = q.pins || {}; for (const n of Object.keys(LIB[q.type].hooks)) q.pins[n] = q.pins[n] || { t: 'p?' }; } render(); changed(); setMsg(q.showPins ? 'Pin numbers shown. Double-click one to edit it; drag it to move it.' : 'Pin numbers hidden. Their text is kept.'); return; }
     if (m === 'editpin') { editPin(t.o, t.pin); return; }
@@ -1730,7 +1773,7 @@ function wireClick(p, raw) {
 function finishDraft() {
   if (wireDraft && wireDraft.pts.length >= 2) {
     snapshot();
-    const w = { id: uid(), pts: simplify(wireDraft.pts) };
+    const w = { id: uid(), pts: simplify(wireDraft.pts) }; if (drawColor !== 'ink') w.color = drawColor;
     if (w.pts.length >= 2) sheet.wires.push(w);
     render(); changed(); setMsg('Wire added');
   }
@@ -1757,6 +1800,7 @@ function setMode(m) {
   renderLib(); renderOver(); updateButtons();
 }
 $('mSelect').onclick = () => setMode('select');
+$('mWColor').onclick = e => { e.stopPropagation(); wireColorMenu($('mWColor')); }; showDrawColor();
 $('mWire').onclick = () => setMode('wire');
 $('mText').onclick = () => setMode('text');
 $('mCut').onclick = () => setMode(mode === 'cut' ? 'select' : 'cut');
@@ -1857,7 +1901,7 @@ function loadProject(p, msg) {
   for (const s of project.sheets) {
     const okPt = q => Array.isArray(q) && q.length === 2 && isFinite(q[0]) && isFinite(q[1]);
     s.parts = (Array.isArray(s.parts) ? s.parts : []).filter(q => q && LIB[q.type] && isFinite(q.x) && isFinite(q.y));
-    s.wires = (Array.isArray(s.wires) ? s.wires : []).filter(w => w && Array.isArray(w.pts)).map(w => ({ id: w.id || uid(), pts: simplify(w.pts.filter(okPt).map(q => [snap(+q[0]), snap(+q[1])])) })).filter(w => w.pts.length >= 2);
+    s.wires = (Array.isArray(s.wires) ? s.wires : []).filter(w => w && Array.isArray(w.pts)).map(w => ({ id: w.id || uid(), pts: simplify(w.pts.filter(okPt).map(q => [snap(+q[0]), snap(+q[1])])), ...(WIRE_COLORS.some(c => c.k === w.color && c.k !== 'ink') ? { color: w.color } : {}) })).filter(w => w.pts.length >= 2);
     s.texts = (Array.isArray(s.texts) ? s.texts : []).filter(t => t && isFinite(t.x) && isFinite(t.y)).map(t => Object.assign({ text: '', size: 12, tone: 'ink' }, t));
     if (!s.id) s.id = uid(); if (typeof s.name !== 'string') s.name = 'Sheet';
     if (!SIZES[s.size]) s.size = 'A'; if (s.orient !== 'P') s.orient = 'L';

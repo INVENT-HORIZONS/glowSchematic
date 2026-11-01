@@ -496,9 +496,16 @@ def('m_twin', { cat: 'Tube, modern', name: 'Twin triode', pre: 'V', value: '12AX
   draw: () => pa(stadium(30, 30), 'env')
     + ln(-42, -15, -18, -15) + ln(-30, -15, -30, -50) + ln(-45, 0, -15, 0, 'dash') + ln(-70, 0, -45, 0) + cath(-40, -18, 15, -40, 50)
     + ln(18, -15, 42, -15) + ln(30, -15, 30, -50) + ln(15, 0, 45, 0, 'dash') + ln(45, 0, 70, 0) + cath(20, 42, 15, 20, 50) });
+def('m_tetrode_dh', { cat: 'Tube, modern', name: 'Tetrode, direct', pre: 'V', value: '22', tags: 'directly heated filament screen grid', hooks: { P: [0, -60], G2: [60, -10], G1: [-60, 0], F1: [-10, 60], F2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env') + ln(-15, -22, 15, -22) + ln(0, -22, 0, -60) + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10)
+    + ln(-18, 0, 18, 0, 'dash') + ln(-60, 0, -18, 0) + filV(12, 32, 60) });
 def('m_tetrode', { cat: 'Tube, modern', name: 'Tetrode', pre: 'V', value: '24-A', hooks: { P: [0, -60], G2: [60, -10], G1: [-60, 0], K: [-10, 60] },
   draw: () => ci(0, 0, 40, 'env') + ln(-15, -22, 15, -22) + ln(0, -22, 0, -60) + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10)
     + ln(-18, 0, 18, 0, 'dash') + ln(-60, 0, -18, 0) + cath(-10, 15, 15, -10, 60) });
+def('m_tetrode_ih', { cat: 'Tube, modern', name: 'Tetrode, indirect', pre: 'V', value: '24-A', tags: 'indirectly heated heater screen grid', hooks: { P: [0, -60], G2: [60, -10], G1: [-60, 0], K: [-20, 60], H1: [-10, 60], H2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env') + ln(-20, -22, 20, -22) + ln(0, -22, 0, -60) + ln(-20, -10, 20, -10, 'dash') + ln(20, -10, 60, -10)
+    + ln(-20, 0, 20, 0, 'dash') + ln(-60, 0, -20, 0) + cath(-20, 22, 12, -20, 60)
+    + pa('M-10 60 V31 A10 10 0 0 1 10 31 V60', 'htr') });
 def('m_pentode', { cat: 'Tube, modern', name: 'Pentode', pre: 'V', value: 'EF86', tags: '6au6 el34 6sj7', hooks: { P: [0, -60], G3: [60, -10], G2: [60, 0], G1: [-60, 10], K: [-10, 60] },
   draw: () => ci(0, 0, 40, 'env') + ln(-15, -24, 15, -24) + ln(0, -24, 0, -60)
     + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10) + ln(-18, 0, 18, 0, 'dash') + ln(18, 0, 60, 0)

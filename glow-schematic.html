@@ -1082,9 +1082,9 @@ function renderLib() {
     let body;
     if (cat === 'Tube, modern') {
       // filament (directly heated) tubes first, in their own group, then everything with a cathode
-      const direct = items.filter(isDirect), rest = items.filter(L => !isDirect(L));
-      body = (direct.length ? `<div class="subcat">Filament (direct)</div><div class="tiles">${direct.map(tile).join('')}</div>` : '')
-           + (rest.length ? `<div class="subcat">Cathode</div><div class="tiles">${rest.map(tile).join('')}</div>` : '');
+      const direct = items.filter(isDirect), withHtr = items.filter(L => !isDirect(L) && /_ih$/.test(L.type)), kOnly = items.filter(L => !isDirect(L) && !/_ih$/.test(L.type));
+      const grp = (label, list) => list.length ? `<div class="subcat">${label}</div><div class="tiles">${list.map(tile).join('')}</div>` : '';
+      body = grp('Filament (direct)', direct) + grp('Cathode only', kOnly) + grp('Cathode + filament', withHtr);
     } else body = `<div class="tiles">${items.map(tile).join('')}</div>`;
     return `<details class="cat" data-cat="${cat}"${open}><summary>${cat}<small>${items.length}</small></summary>${body}</details>`;
   }).join('') || `<p class="props empty" style="padding:8px">No part matches “${esc(q)}”.</p>`;

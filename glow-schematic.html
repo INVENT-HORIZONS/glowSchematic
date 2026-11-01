@@ -455,6 +455,10 @@ def('heater', { cat: 'Heater', name: 'Heater', pre: 'H', value: '6.3 V', hooks: 
   draw: () => pa('M0 0 H12 A8 8 0 0 1 28 0 H40', 'htr') });
 def('heater_ct', { cat: 'Heater', name: 'Heater, center tap', pre: 'H', value: '12.6 V', tags: '12ax7 twin', hooks: { 1: [0, 0], 2: [60, 0], CT: [30, 20] },
   draw: () => pa('M0 0 H8 A7 7 0 0 1 22 0 H38 A7 7 0 0 1 52 0 H60', 'htr') + ln(30, 0, 30, 20, 'htr') });
+def('heater_tri', { cat: 'Heater', name: 'Heater, triangle', pre: 'H', value: '6.3 V', tags: 'filament v', hooks: { 1: [0, 0], 2: [40, 0] },
+  draw: () => pa('M0 0 H12 L20 -8 L28 0 H40', 'htr') });
+def('heater_ct_tri', { cat: 'Heater', name: 'Heater, center tap, triangle', pre: 'H', value: '12.6 V', tags: '12ax7 twin filament v', hooks: { 1: [0, 0], 2: [60, 0], CT: [30, 20] },
+  draw: () => pa('M0 0 H8 L15 -7 L22 0 H38 L45 -7 L52 0 H60', 'htr') + ln(30, 0, 30, 20, 'htr') });
 
 /* ---- power and connections ---- */
 def('ground', { cat: 'Connection', name: 'Ground', pre: 'GND', value: '0 V', hooks: { G: [0, 0] }, hideLabel: true,

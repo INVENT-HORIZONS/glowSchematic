@@ -15,7 +15,7 @@ Open `glow-schematic.html` in any modern browser. Everything is in the one file;
   - Right-click to rotate, mirror or delete.
   - Double-click a part, its ref des or its value to edit.
   - Delete on a selected label hides it instead of deleting anything.
-- **Toolbox:** Select (V), Wire (W), Text (T), Scissors (C, cuts a whole part or wire) and Segment scissors (S, cuts one wire segment).
+- **Toolbox:** Select (V), Wire (W), Text (T), Cut (C, removes a whole part or wire) and Snip (S, removes one wire segment).
 - **Sheets:** ANSI A (Letter), B (Tabloid), C and D, portrait or landscape, with mixed sizes in one project. Each sheet can have:
   - A zoned border.
   - A revision chart.
@@ -32,7 +32,7 @@ The sheet uses the newsletter's palette: paper `#FBF8F3`, ink `#17120E`, and glo
 
 | Key | Action |
 | --- | --- |
-| V / W / T / C / S | Select, Wire, Text, Scissors, Segment scissors |
+| V / W / T / C / S | Select, Wire, Text, Cut, Snip |
 | R / X | Rotate, mirror |
 | Del | Delete the selection (hides a selected label) |
 | Ctrl+Z / Ctrl+Y | Undo, redo |

@@ -183,6 +183,7 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
 .cat[open] > summary::before { transform: rotate(90deg); }
 .cat > summary:hover { background: var(--chrome-2); }
 .cat > summary small { margin-left: auto; font: 400 10.5px var(--font-mono); color: var(--muted); }
+.subcat { font: 500 9.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 4px 4px 0; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 4px; padding: 3px 2px 6px; }
 .tile { display: grid; grid-template-rows: 46px auto; gap: 2px; align-items: center; justify-items: center; padding: 4px 3px 5px;
   border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); cursor: pointer; text-align: center; }
@@ -1063,6 +1064,7 @@ function thumb(type) {
   const L = LIB[type], b = L.bb, pad = 4;
   return `<svg viewBox="${b[0] - pad} ${b[1] - pad} ${b[2] - b[0] + 2 * pad} ${b[3] - b[1] + 2 * pad}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${L.draw()}</svg>`;
 }
+const isDirect = L => /_dh$/.test(L.type) || L.type === 'm_rect';
 function renderLib() {
   const q = $('search').value.trim().toLowerCase();
   let total = 0;
@@ -1071,8 +1073,15 @@ function renderLib() {
     total += items.length;
     if (!items.length) return '';
     const open = q || !libClosed.has(cat) ? ' open' : '';
-    return `<details class="cat" data-cat="${cat}"${open}><summary>${cat}<small>${items.length}</small></summary><div class="tiles">${items.map(L =>
-      `<button class="tile${placeType === L.type && mode === 'place' ? ' armed' : ''}" data-type="${L.type}" title="${esc(L.name)} · ${Object.keys(L.hooks).length} hooks">${thumb(L.type)}<span>${esc(L.name)}</span></button>`).join('')}</div></details>`;
+    const tile = L => `<button class="tile${placeType === L.type && mode === 'place' ? ' armed' : ''}" data-type="${L.type}" title="${esc(L.name)} · ${Object.keys(L.hooks).length} hooks">${thumb(L.type)}<span>${esc(L.name)}</span></button>`;
+    let body;
+    if (cat === 'Tube, modern') {
+      // filament (directly heated) tubes first, in their own group, then everything with a cathode
+      const direct = items.filter(isDirect), rest = items.filter(L => !isDirect(L));
+      body = (direct.length ? `<div class="subcat">Filament (direct)</div><div class="tiles">${direct.map(tile).join('')}</div>` : '')
+           + (rest.length ? `<div class="subcat">Cathode</div><div class="tiles">${rest.map(tile).join('')}</div>` : '');
+    } else body = `<div class="tiles">${items.map(tile).join('')}</div>`;
+    return `<details class="cat" data-cat="${cat}"${open}><summary>${cat}<small>${items.length}</small></summary>${body}</details>`;
   }).join('') || `<p class="props empty" style="padding:8px">No part matches “${esc(q)}”.</p>`;
   $('partCount').textContent = total + ' parts';
 }

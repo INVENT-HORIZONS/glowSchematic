@@ -227,6 +227,7 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
 /* sheet drawing */
 .ink { stroke: var(--ink); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .env { stroke: var(--ink); fill: none; stroke-width: 1.8; }
+.solid { fill: var(--ink); }
 .htr { stroke: var(--glow); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .dash { stroke: var(--ink); fill: none; stroke-width: 1.6; stroke-dasharray: 5 3.4; }
 .wire { stroke: var(--ink); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -442,6 +443,15 @@ def('diode_schottky', { cat: 'Semiconductors', name: 'Schottky diode', pre: 'D',
   draw: () => ln(0, 0, 13, 0) + pg([[13, -8], [13, 8], [27, 0]]) + pl([[31, 5], [31, 8], [27, 8], [27, -8], [23, -8], [23, -5]]) + ln(27, 0, 40, 0) });
 def('diode_zener', { cat: 'Semiconductors', name: 'Zener diode', pre: 'D', value: '1N4742A', hooks: { A: [0, 0], K: [40, 0] },
   draw: () => ln(0, 0, 13, 0) + pg([[13, -8], [13, 8], [27, 0]]) + pl([[31, 11], [27, 8], [27, -8], [23, -11]]) + ln(27, 0, 40, 0) });
+
+// Bipolar transistors: base on the left, collector up, emitter down; the arrow on the emitter
+// points out for NPN and in for PNP.
+const bjt = arrow => ci(2, 0, 18, 'env') + ln(-30, 0, -5, 0) + ln(-5, -11, -5, 11)
+  + pl([[-5, -6], [10, -16], [10, -30]]) + pl([[-5, 6], [10, 16], [10, 30]]) + pg(arrow, 'ink solid');
+def('npn', { cat: 'Semiconductors', name: 'NPN transistor', pre: 'Q', value: '2N3904', tags: 'bjt bipolar', hooks: { B: [-30, 0], C: [10, -30], E: [10, 30] },
+  draw: () => bjt([[7.8, 14.5], [1.1, 13.7], [4.4, 8.7]]) });
+def('pnp', { cat: 'Semiconductors', name: 'PNP transistor', pre: 'Q', value: '2N3906', tags: 'bjt bipolar', hooks: { B: [-30, 0], C: [10, -30], E: [10, 30] },
+  draw: () => bjt([[0.3, 9.5], [3.6, 15.3], [6.9, 10.3]]) });
 
 /* ---- transformers ---- */
 function xfmr(pct, sct) {
@@ -1891,7 +1901,7 @@ function sheetSVG(withBg = true, whole = false) {
   let x0, y0, x1, y1;
   if (whole) { const [SW, SH] = sheetDims(sheet); x0 = 0; y0 = 0; x1 = SW; y1 = SH; }
   else { if (!bbs.length) return null; const pad = 16; x0 = Math.min(...bbs.map(b => b[0])) - pad; y0 = Math.min(...bbs.map(b => b[1])) - pad; x1 = Math.max(...bbs.map(b => b[2])) + pad; y1 = Math.max(...bbs.map(b => b[3])) + pad; }
-  const css = `.ink{stroke:#17120E;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.env{stroke:#17120E;fill:none;stroke-width:1.8}.htr{stroke:#E8912D;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.dash{stroke:#17120E;fill:none;stroke-width:1.6;stroke-dasharray:5 3.4}.wire{stroke:#17120E;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.jdot{fill:#17120E}.lbl{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:11px;fill:#17120E}.lbl .ref,.lbl.ref{font-weight:600}.pinno{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:8.5px;fill:#17120E}.pinlead{stroke:#5C5248;stroke-width:.8;stroke-dasharray:1.2 2;fill:none}.stxt{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;white-space:pre}.fr{stroke:#17120E;fill:none;stroke-width:1.1}.fr-b{stroke:#17120E;fill:none;stroke-width:2}.fr-lab{font-family:'JetBrains Mono',Consolas,monospace;font-size:7.5px;letter-spacing:.08em;fill:#5C5248}.fr-val{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;fill:#17120E}.fr-zone{font-family:'JetBrains Mono',Consolas,monospace;font-size:10px;fill:#5C5248}.fr-co{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-weight:800;fill:#17120E}`;
+  const css = `.ink{stroke:#17120E;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.solid{fill:#17120E}.env{stroke:#17120E;fill:none;stroke-width:1.8}.htr{stroke:#E8912D;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.dash{stroke:#17120E;fill:none;stroke-width:1.6;stroke-dasharray:5 3.4}.wire{stroke:#17120E;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}.jdot{fill:#17120E}.lbl{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:11px;fill:#17120E}.lbl .ref,.lbl.ref{font-weight:600}.pinno{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;font-size:8.5px;fill:#17120E}.pinlead{stroke:#5C5248;stroke-width:.8;stroke-dasharray:1.2 2;fill:none}.stxt{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;white-space:pre}.fr{stroke:#17120E;fill:none;stroke-width:1.1}.fr-b{stroke:#17120E;fill:none;stroke-width:2}.fr-lab{font-family:'JetBrains Mono',Consolas,monospace;font-size:7.5px;letter-spacing:.08em;fill:#5C5248}.fr-val{font-family:'Libre Franklin','Franklin Gothic Book',Arial,sans-serif;fill:#17120E}.fr-zone{font-family:'JetBrains Mono',Consolas,monospace;font-size:10px;fill:#5C5248}.fr-co{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;font-weight:800;fill:#17120E}`;
   const body = ((whole ? $('layerFrame').innerHTML : '') + $('layerParts').innerHTML + $('layerWires').innerHTML + $('layerText').innerHTML).replace(/var\(--ink\)/g, '#17120E').replace(/var\(--paper\)/g, '#FBF8F3');
   return { w: x1 - x0, h: y1 - y0, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" width="${x1 - x0}" height="${y1 - y0}"><style>${css}</style>${withBg ? `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="#FBF8F3"/>` : ''}${body}</svg>` };
 }

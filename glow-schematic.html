@@ -462,6 +462,18 @@ def('njfet', { cat: 'Semiconductors', name: 'N-channel JFET', pre: 'Q', value: '
 def('pjfet', { cat: 'Semiconductors', name: 'P-channel JFET', pre: 'Q', value: '2N5460', tags: 'jfet fet p channel', hooks: { G: [-30, 0], D: [10, -30], S: [10, 30] },
   draw: () => jfet([[-15, 0], [-8, -3.5], [-8, 3.5]]) });
 
+// MOSFETs (body tied to source): insulated gate bar, channel broken in three for enhancement or
+// solid for depletion, drain up, source down. The body arrow points in for N-channel, out for P.
+const mosfet = (dep, arrow) => ci(2, 0, 18, 'env') + ln(-30, 0, -8, 0) + ln(-8, -10, -8, 10)
+  + (dep ? ln(-3, -12, -3, 12) : ln(-3, -12, -3, -6) + ln(-3, -3, -3, 3) + ln(-3, 6, -3, 12))
+  + pl([[-3, -9], [10, -9], [10, -30]]) + pl([[-3, 9], [10, 9], [10, 30]]) + pl([[-3, 0], [10, 0], [10, 9]]) + pg(arrow, 'ink solid');
+const NARR = [[-2, 0], [5, -3.5], [5, 3.5]], PARR = [[9, 0], [2, -3.5], [2, 3.5]];
+const MOS_H = { G: [-30, 0], D: [10, -30], S: [10, 30] };
+def('nmos', { cat: 'Semiconductors', name: 'N-channel MOSFET, enhancement', pre: 'Q', value: '2N7000', tags: 'mosfet fet n channel enhancement', hooks: MOS_H, draw: () => mosfet(0, NARR) });
+def('nmos_dep', { cat: 'Semiconductors', name: 'N-channel MOSFET, depletion', pre: 'Q', value: 'BSS139', tags: 'mosfet fet n channel depletion', hooks: MOS_H, draw: () => mosfet(1, NARR) });
+def('pmos', { cat: 'Semiconductors', name: 'P-channel MOSFET, enhancement', pre: 'Q', value: 'BS250', tags: 'mosfet fet p channel enhancement', hooks: MOS_H, draw: () => mosfet(0, PARR) });
+def('pmos_dep', { cat: 'Semiconductors', name: 'P-channel MOSFET, depletion', pre: 'Q', value: '', tags: 'mosfet fet p channel depletion', hooks: MOS_H, draw: () => mosfet(1, PARR) });
+
 /* ---- transformers ---- */
 function xfmr(pct, sct) {
   let s = ln(0, 0, 10, 0) + ln(10, 0, 10, 10) + pa(coilY(10, 10, 4, 1)) + ln(10, 50, 10, 60) + ln(10, 60, 0, 60)

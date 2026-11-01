@@ -516,10 +516,10 @@ def('m_pentode_dh', { cat: 'Tube, modern', name: 'Pentode, direct', pre: 'V', va
   draw: () => ci(0, 0, 40, 'env') + ln(-15, -24, 15, -24) + ln(0, -24, 0, -60)
     + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10) + ln(-18, 0, 18, 0, 'dash') + ln(18, 0, 60, 0)
     + ln(-18, 10, 18, 10, 'dash') + ln(-60, 10, -18, 10) + filV(19, 33, 60) });
-def('m_pentode', { cat: 'Tube, modern', name: 'Pentode', pre: 'V', value: 'EF86', tags: '6au6 el34 6sj7', hooks: { P: [0, -60], G3: [60, -10], G2: [60, 0], G1: [-60, 10], K: [-10, 60] },
+def('m_pentode', { cat: 'Tube, modern', name: 'Pentode', pre: 'V', value: 'EF86', tags: '6au6 el34 6sj7', hooks: { P: [0, -60], G3: [60, -10], G2: [60, 0], G1: [-60, 10], K: [-20, 60] },
   draw: () => ci(0, 0, 40, 'env') + ln(-15, -24, 15, -24) + ln(0, -24, 0, -60)
     + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10) + ln(-18, 0, 18, 0, 'dash') + ln(18, 0, 60, 0)
-    + ln(-18, 10, 18, 10, 'dash') + ln(-60, 10, -18, 10) + cath(-10, 15, 22, -10, 60) });
+    + ln(-18, 10, 18, 10, 'dash') + ln(-60, 10, -18, 10) + cath(-20, 20, 22, -20, 60) });
 def('m_pentode_ih', { cat: 'Tube, modern', name: 'Pentode, indirect', pre: 'V', value: 'EF86', tags: '6au6 el34 6sj7 indirectly heated heater', hooks: { P: [0, -60], G3: [60, -10], G2: [60, 0], G1: [-60, 10], K: [-20, 60], H1: [-10, 60], H2: [10, 60] },
   draw: () => ci(0, 0, 40, 'env') + ln(-20, -24, 20, -24) + ln(0, -24, 0, -60)
     + ln(-20, -10, 20, -10, 'dash') + ln(20, -10, 60, -10) + ln(-20, 0, 20, 0, 'dash') + ln(20, 0, 60, 0)
@@ -753,23 +753,19 @@ function frameSVG(s) {
   }
   return out.join('');
 }
-function nextRef(pre) {
-  if (!pre) return '';
-  let n = 1; const used = new Set(sheet.parts.map(p => p.ref));
-  while (used.has(pre + n)) n++;
-  return pre + n;
-}
+// new parts get an unnumbered designator (V?, R?, C? ...); numbers are filled in by the user
+function nextRef(pre) { return pre ? pre + '?' : ''; }
 function exampleProject() {
   const s = newSheet('2A3 filament, center tap'); s.file = '2a3-filament-ct.sch';
   const P = (type, x, y, o = {}) => { const p = Object.assign({ id: uid(), type, x, y, rot: 0, flip: false, ref: '', value: LIB[type].value, showRef: !LIB[type].hideLabel, showVal: !LIB[type].hideLabel, lx: 0, ly: 0 }, o); s.parts.push(p); return p; };
-  P('p30_triode_dh', 300, 200, { ref: 'V1', value: '2A3' });
-  P('resistor', 210, 200, { rot: 1, ref: 'R1', value: 'grid return', lx: -86, ly: 0 });
+  P('p30_triode_dh', 300, 200, { ref: 'V?', value: '2A3' });
+  P('resistor', 210, 200, { rot: 1, ref: 'R?', value: 'grid return', lx: -86, ly: 0 });
   P('ground', 210, 260);
-  P('inductor_ct', 270, 300, { ref: 'T1', value: 'Ef 2.5 V ac, 2.5 A', lx: 6, ly: -12 });
-  P('resistor', 380, 340, { rot: 1, ref: 'Rk', value: 'about 700 Ω' });
-  P('capacitor', 470, 340, { rot: 1, ref: 'C1', value: 'bypass' });
+  P('inductor_ct', 270, 300, { ref: 'T?', value: 'Ef 2.5 V ac, 2.5 A', lx: 6, ly: -12 });
+  P('resistor', 380, 340, { rot: 1, ref: 'R?', value: 'Rk, about 700 Ω' });
+  P('capacitor', 470, 340, { rot: 1, ref: 'C?', value: 'bypass' });
   P('ground', 420, 410);
-  P('terminal', 340, 130, { ref: 'J1', value: 'to OPT', showRef: false, showVal: false });
+  P('terminal', 340, 130, { ref: 'J?', value: 'to OPT', showRef: false, showVal: false });
   const W = pts => s.wires.push({ id: uid(), pts });
   W([[300, 150], [300, 130], [340, 130]]);
   W([[250, 200], [210, 200]]);

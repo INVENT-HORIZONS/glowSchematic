@@ -506,10 +506,19 @@ def('m_tetrode_ih', { cat: 'Tube, modern', name: 'Tetrode, indirect', pre: 'V', 
   draw: () => ci(0, 0, 40, 'env') + ln(-20, -22, 20, -22) + ln(0, -22, 0, -60) + ln(-20, -10, 20, -10, 'dash') + ln(20, -10, 60, -10)
     + ln(-20, 0, 20, 0, 'dash') + ln(-60, 0, -20, 0) + cath(-20, 22, 12, -20, 60)
     + pa('M-10 60 V31 A10 10 0 0 1 10 31 V60', 'htr') });
+def('m_pentode_dh', { cat: 'Tube, modern', name: 'Pentode, direct', pre: 'V', value: '33', tags: 'directly heated filament suppressor', hooks: { P: [0, -60], G3: [60, -10], G2: [60, 0], G1: [-60, 10], F1: [-10, 60], F2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env') + ln(-15, -24, 15, -24) + ln(0, -24, 0, -60)
+    + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10) + ln(-18, 0, 18, 0, 'dash') + ln(18, 0, 60, 0)
+    + ln(-18, 10, 18, 10, 'dash') + ln(-60, 10, -18, 10) + filV(19, 33, 60) });
 def('m_pentode', { cat: 'Tube, modern', name: 'Pentode', pre: 'V', value: 'EF86', tags: '6au6 el34 6sj7', hooks: { P: [0, -60], G3: [60, -10], G2: [60, 0], G1: [-60, 10], K: [-10, 60] },
   draw: () => ci(0, 0, 40, 'env') + ln(-15, -24, 15, -24) + ln(0, -24, 0, -60)
     + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10) + ln(-18, 0, 18, 0, 'dash') + ln(18, 0, 60, 0)
     + ln(-18, 10, 18, 10, 'dash') + ln(-60, 10, -18, 10) + cath(-10, 15, 22, -10, 60) });
+def('m_pentode_ih', { cat: 'Tube, modern', name: 'Pentode, indirect', pre: 'V', value: 'EF86', tags: '6au6 el34 6sj7 indirectly heated heater', hooks: { P: [0, -60], G3: [60, -10], G2: [60, 0], G1: [-60, 10], K: [-20, 60], H1: [-10, 60], H2: [10, 60] },
+  draw: () => ci(0, 0, 40, 'env') + ln(-20, -24, 20, -24) + ln(0, -24, 0, -60)
+    + ln(-20, -10, 20, -10, 'dash') + ln(20, -10, 60, -10) + ln(-20, 0, 20, 0, 'dash') + ln(20, 0, 60, 0)
+    + ln(-20, 10, 20, 10, 'dash') + ln(-60, 10, -20, 10) + cath(-20, 22, 18, -20, 60)
+    + pa('M-10 60 V34 A10 10 0 0 1 10 34 V60', 'htr') });
 def('m_beam', { cat: 'Tube, modern', name: 'Beam power tube', pre: 'V', value: '6V6', tags: '6l6 kt88 6550 el34', hooks: { P: [0, -60], G2: [60, -10], G1: [-60, 0], K: [-10, 60] },
   draw: () => ci(0, 0, 40, 'env') + ln(-15, -22, 15, -22) + ln(0, -22, 0, -60) + ln(-16, -10, 16, -10, 'dash') + ln(16, -10, 60, -10)
     + ln(-16, 0, 16, 0, 'dash') + ln(-60, 0, -16, 0) + ln(-22, 15, 22, 15) + ln(-22, -16, -22, 15, 'dash') + ln(22, -16, 22, 15, 'dash') + ln(-10, 15, -10, 60) });

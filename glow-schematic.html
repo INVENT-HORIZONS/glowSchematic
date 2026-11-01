@@ -540,12 +540,15 @@ def('m_pentode_ih', { cat: 'Tube, modern', name: 'Pentode, indirect', pre: 'V', 
     + ln(-20, -10, 20, -10, 'dash') + ln(20, -10, 60, -10) + ln(-20, 0, 20, 0, 'dash') + ln(20, 0, 60, 0)
     + ln(-20, 10, 20, 10, 'dash') + ln(-60, 10, -20, 10) + cath(-20, 22, 18, -20, 60)
     + pl([[-10, 60], [-10, 34], [0, 24], [10, 34], [10, 60]], 'htr') });
+// Beam-forming plates: a cathode-tied cradle around the grids. The bottom bar is the cathode;
+// each side hops outward where a grid lead crosses it (G1 on the left at y 0, G2 on the right at y -10).
+const beamCradle = () => pa('M -22 -17 L -28 -17 L -28 -3 A 3 3 0 0 0 -28 3 L -28 8 L -24 12 L 24 12 L 28 8 L 28 -7 A 3 3 0 0 0 28 -13 L 28 -17 L 22 -17');
+const beamBody = () => ci(0, 0, 40, 'env') + ln(-20, -24, 20, -24) + ln(0, -24, 0, -60)
+  + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10) + ln(-18, 0, 18, 0, 'dash') + ln(-60, 0, -18, 0) + beamCradle();
 def('m_beam', { cat: 'Tube, modern', name: 'Beam power', pre: 'V', value: '6V6', tags: '6l6 kt88 6550 el34', hooks: { P: [0, -60], G2: [60, -10], G1: [-60, 0], K: [-10, 60] },
-  draw: () => ci(0, 0, 40, 'env') + ln(-15, -22, 15, -22) + ln(0, -22, 0, -60) + ln(-16, -10, 16, -10, 'dash') + ln(16, -10, 60, -10)
-    + ln(-16, 0, 16, 0, 'dash') + ln(-60, 0, -16, 0) + ln(-22, 15, 22, 15) + ln(-22, -16, -22, 15, 'dash') + ln(22, -16, 22, 15, 'dash') + ln(-10, 15, -10, 60) });
+  draw: () => beamBody() + ln(-10, 12, -10, 60) });
 def('m_beam_ih', { cat: 'Tube, modern', name: 'Beam power, filament', pre: 'V', value: '6V6', tags: '6l6 kt88 6550 el34 heater indirectly heated', hooks: { P: [0, -60], G2: [60, -10], G1: [-60, 0], K: [-20, 60], H1: [-10, 60], H2: [10, 60] },
-  draw: () => ci(0, 0, 40, 'env') + ln(-20, -22, 20, -22) + ln(0, -22, 0, -60) + ln(-18, -10, 18, -10, 'dash') + ln(18, -10, 60, -10)
-    + ln(-18, 0, 18, 0, 'dash') + ln(-60, 0, -18, 0) + ln(-24, 12, 24, 12) + ln(-24, -16, -24, 12, 'dash') + ln(24, -16, 24, 12, 'dash') + ln(-20, 12, -20, 60)
+  draw: () => beamBody() + ln(-20, 12, -20, 60)
     + pl([[-10, 60], [-10, 31], [0, 21], [10, 31], [10, 60]], 'htr') });
 
 /* ---- period tubes for the Vintage Tube spotlight ---- */

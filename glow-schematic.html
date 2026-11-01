@@ -630,13 +630,17 @@ function pmtBuild(n) {
   const hooks = { K: [x0, 50] };
   for (let i = 1; i <= n; i++) hooks['D' + i] = [x0 + i * 10, i % 2 ? -50 : 50];
   hooks.P = [xn + 40, 0];
-  const arrow = (x1, y1, x2, y2) => ln(x1, y1, x2, y2) + pg([[x2 + 1.5, y2 + 1.5], [x2 - 4.2, y2 + 0.6], [x2 + 0.6, y2 - 4.2]], 'ink solid');
+  const arrow = (x1, y1, x2, y2) => { const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L, bx = x2 - 6 * ux, by = y2 - 6 * uy;
+    return ln(x1, y1, bx, by) + pg([[x2, y2], [bx - 2.6 * uy, by + 2.6 * ux], [bx + 2.6 * uy, by - 2.6 * ux]], 'ink solid'); };
   const draw = () => {
     let d = `<g transform="translate(${cx} 0)">${pa(stadium(hl, 30), 'env')}</g>`;
-    d += pa(`M ${x0 - 11} 4 Q ${x0 - 2} 28 ${x0 + 13} 11`) + ln(x0, 17, x0, 50);           // photocathode, cupped toward D1
-    for (let i = 1; i <= n; i++) { const x = x0 + i * 10; d += i % 2 ? ln(x - 4, -14, x + 4, -14) + ln(x, -14, x, -50) : ln(x - 4, 14, x + 4, 14) + ln(x, 14, x, 50); }
+    d += pa(`M ${x0 - 9} -8 Q ${x0 - 6} 14 ${x0 + 9} 4`) + ln(x0, 7, x0, 50);           // photocathode, cupped toward D1
+    for (let i = 1; i < n; i++) { const x = x0 + i * 10; d += i % 2 ? ln(x - 4, -14, x + 4, -14) + ln(x, -14, x, -50) : ln(x - 4, 14, x + 4, 14) + ln(x, 14, x, 50); }
+    // last dynode: a slanted plate that bounces the electrons on to the anode
+    d += n % 2 ? ln(xn - 5, -7, xn + 5, -17) + ln(xn, -12, xn, -50)
+               : ln(xn - 5, 7, xn + 5, 17) + ln(xn, 12, xn, 50);
     d += ln(xn + 18, -12, xn + 18, 12) + ln(xn + 18, 0, xn + 40, 0);                         // anode
-    return d + arrow(xl - 18, -12, xl - 3, 3) + arrow(xl - 18, 0, xl - 3, 15);                 // light in
+    return d + arrow(x0 - 22, -36, x0 - 8, -22) + arrow(x0 - 29, -25, x0 - 15, -11);          // light in at the upper left, onto the photocathode
   };
   return { hooks, draw };
 }

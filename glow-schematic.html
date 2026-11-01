@@ -239,6 +239,9 @@ button, input, select, textarea { font: inherit; color: inherit; box-sizing: bor
 .sw[aria-pressed="true"], .menu button.sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
 .sw:hover, .sw:focus-visible, .menu button.sw:hover, .menu button.sw:focus-visible { box-shadow: 0 0 0 2px var(--accent); outline: none; }
 .menu .swatches { padding: 2px 10px 8px; }
+.chips { display: grid; grid-template-columns: repeat(7, 26px); gap: 3px; padding: 2px 10px 8px; }
+.menu button.chip { width: 26px; height: 22px; padding: 0; display: flex; justify-content: center; align-items: center; text-align: center; font: 500 11px var(--font-mono); border: 1px solid var(--line); border-radius: 4px; }
+.menu button.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
 .menu .mlabel { padding: 5px 10px 4px; font: 500 10.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .pinno { font-family: "Libre Franklin", sans-serif; font-size: 8.5px; fill: var(--ink); }
 .pinlead { stroke: #5C5248; stroke-width: .8; stroke-dasharray: 1.2 2; fill: none; }
@@ -619,12 +622,26 @@ def('m_gas_thyratron_t', { cat: 'Tube, modern', name: 'Thyratron, tetrode', pre:
     + pl([[-10, 60], [-10, 31], [0, 21], [10, 31], [10, 60]], 'htr') + gasDot(28, -18) });
 
 // Specialized tubes.
-// Photomultiplier: photocathode arc on the left, dynodes D1-D9 alternating bottom/top, anode bar on the right.
-const pmtDyn = () => { let d = ''; for (let i = 0; i < 9; i++) { const x = -40 + i * 10, top = i % 2 === 1; d += top ? ln(x - 4, -14, x + 4, -14) + ln(x, -14, x, -50) : ln(x - 4, 14, x + 4, 14) + ln(x, 14, x, 50); } return d; };
-const pmtHooks = (() => { const h = { K: [-80, 0] }; for (let i = 0; i < 9; i++) h['D' + (i + 1)] = [-40 + i * 10, i % 2 ? -50 : 50]; h.P = [80, 0]; return h; })();
-def('m_sp_pmt', { cat: 'Tube, modern', name: 'Photomultiplier', pre: 'V', value: '', tags: '931a 1p21 1p28 photomultiplier pmt photo dynode', hooks: pmtHooks,
-  draw: () => pa(stadium(42, 30), 'env') + pa('M -52 -18 A 24 24 0 0 0 -52 18') + ln(-80, 0, -60, 0) + pmtDyn() + ln(58, -12, 58, 12) + ln(58, 0, 80, 0)
-    + ln(-86, -48, -72, -34) + pg([[-70, -32], [-76, -34], [-72, -38]], 'ink solid') + ln(-76, -54, -62, -40) + pg([[-60, -38], [-66, -40], [-62, -44]], 'ink solid') });
+// Photomultiplier, built for any number of dynodes (2-14). Left to right along the bottom/top: the curved
+// photocathode (bottom, lead K) faces D1 above it; the dynodes then alternate top/bottom, 10 apart; the anode
+// bar sits past the last dynode with its lead P out to the right. K and D1 never move as the count changes.
+function pmtBuild(n) {
+  const x0 = -50, xn = x0 + n * 10, xl = x0 - 16, xr = xn + 26, cx = (xl + xr) / 2, hl = Math.max(0, (xr - xl) / 2 - 30);
+  const hooks = { K: [x0, 50] };
+  for (let i = 1; i <= n; i++) hooks['D' + i] = [x0 + i * 10, i % 2 ? -50 : 50];
+  hooks.P = [xn + 40, 0];
+  const arrow = (x1, y1, x2, y2) => ln(x1, y1, x2, y2) + pg([[x2 + 1.5, y2 + 1.5], [x2 - 4.2, y2 + 0.6], [x2 + 0.6, y2 - 4.2]], 'ink solid');
+  const draw = () => {
+    let d = `<g transform="translate(${cx} 0)">${pa(stadium(hl, 30), 'env')}</g>`;
+    d += pa(`M ${x0 - 11} 4 Q ${x0 - 2} 28 ${x0 + 13} 11`) + ln(x0, 17, x0, 50);           // photocathode, cupped toward D1
+    for (let i = 1; i <= n; i++) { const x = x0 + i * 10; d += i % 2 ? ln(x - 4, -14, x + 4, -14) + ln(x, -14, x, -50) : ln(x - 4, 14, x + 4, 14) + ln(x, 14, x, 50); }
+    d += ln(xn + 18, -12, xn + 18, 12) + ln(xn + 18, 0, xn + 40, 0);                         // anode
+    return d + arrow(xl - 18, -12, xl - 3, 3) + arrow(xl - 18, 0, xl - 3, 15);                 // light in
+  };
+  return { hooks, draw };
+}
+def('m_sp_pmt', Object.assign({ cat: 'Tube, modern', name: 'Photomultiplier', pre: 'V', value: '', tags: '931a 1p21 1p28 photomultiplier pmt photo dynode',
+  vary: { key: 'dyn', label: 'Dynodes', min: 2, max: 14, def: 9, build: pmtBuild } }, pmtBuild(9)));
 // Electron-ray tuning indicator: triode (plate bar over dashed grid) in the lower left, its plate tied to the
 // ray-control electrode (the short upright) and brought out on the right; target cone on top.
 def('m_sp_eye', { cat: 'Tube, modern', name: 'Electron-ray indicator (eye)', pre: 'V', value: '', tags: '6e5 6u5 6af6 6g5 em34 em84 eye magic eye tuning indicator electron ray', hooks: { T: [0, -60], P: [60, 0], G: [-60, 10], K: [-20, 60], H1: [-10, 60], H2: [10, 60] },
@@ -691,21 +708,29 @@ for (const era of ['1930s', '1920s']) for (const ih of [false, true]) for (const
 for (const k in LIB) if (LIB[k].cat.startsWith('Tube')) LIB[k].value = '';
 const CATS = ['Passive', 'Semiconductors', 'Tube, modern', 'Transformer', 'Heater', 'Power', 'Misc', 'Tube, 1930s', 'Tube, 1920s'];
 
-/* local bounding boxes, measured once */
-(function measure() {
+/* local bounding boxes, measured once (and per variant, on first use) */
+function measureBB(draw, hooks) {
   const ns = 'http://www.w3.org/2000/svg', tmp = document.createElementNS(ns, 'svg');
   tmp.setAttribute('style', 'position:absolute;left:-9999px;top:0;width:10px;height:10px;visibility:hidden');
   document.body.appendChild(tmp);
-  for (const k in LIB) {
-    const g = document.createElementNS(ns, 'g'); g.innerHTML = LIB[k].draw(); tmp.appendChild(g);
-    let b; try { b = g.getBBox(); } catch { b = { x: -30, y: -30, width: 60, height: 60 }; }
-    const hs = Object.values(LIB[k].hooks);
-    let x0 = Math.min(b.x, ...hs.map(h => h[0])), y0 = Math.min(b.y, ...hs.map(h => h[1]));
-    let x1 = Math.max(b.x + b.width, ...hs.map(h => h[0])), y1 = Math.max(b.y + b.height, ...hs.map(h => h[1]));
-    LIB[k].bb = [x0 - 1, y0 - 1, x1 + 1, y1 + 1];
-  }
+  const g = document.createElementNS(ns, 'g'); g.innerHTML = draw(); tmp.appendChild(g);
+  let b; try { b = g.getBBox(); } catch { b = { x: -30, y: -30, width: 60, height: 60 }; }
   tmp.remove();
-})();
+  const hs = Object.values(hooks);
+  const x0 = Math.min(b.x, ...hs.map(h => h[0])), y0 = Math.min(b.y, ...hs.map(h => h[1]));
+  const x1 = Math.max(b.x + b.width, ...hs.map(h => h[0])), y1 = Math.max(b.y + b.height, ...hs.map(h => h[1]));
+  return [x0 - 1, y0 - 1, x1 + 1, y1 + 1];
+}
+for (const k in LIB) LIB[k].bb = measureBB(LIB[k].draw, LIB[k].hooks);
+// Parts with a setting that changes their shape (the photomultiplier's dynode count) get their hooks,
+// drawing and box from here; every other part just returns its library entry.
+const varyN = p => { const v = LIB[p.type].vary; const n = Math.round(+p[v.key]); return isFinite(n) ? Math.min(v.max, Math.max(v.min, n)) : v.def; };
+function shapeOf(p) {
+  const L = LIB[p.type]; if (!L.vary) return L;
+  const n = varyN(p), c = L._v || (L._v = {});
+  if (!c[n]) { const v = L.vary.build(n); c[n] = { hooks: v.hooks, draw: v.draw, bb: measureBB(v.draw, v.hooks) }; }
+  return c[n];
+}
 
 /* =====================================================================
    DOCUMENT MODEL
@@ -732,11 +757,11 @@ function xf(p, h) {             // local hook -> world
   return [p.x + x, p.y + y];
 }
 function partBB(p) {
-  const b = LIB[p.type].bb, cs = [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]]].map(c => xf(p, c));
+  const b = shapeOf(p).bb, cs = [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]]].map(c => xf(p, c));
   const xs = cs.map(c => c[0]), ys = cs.map(c => c[1]);
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 }
-function hooksOf(p) { return Object.entries(LIB[p.type].hooks).map(([name, h]) => ({ name, pos: xf(p, h), part: p })); }
+function hooksOf(p) { return Object.entries(shapeOf(p).hooks).map(([name, h]) => ({ name, pos: xf(p, h), part: p })); }
 const allHooks = () => sheet.parts.flatMap(hooksOf);
 function labelPos(p) {
   const bb = partBB(p);
@@ -901,15 +926,14 @@ function applyView() {
   $('stZoom').textContent = Math.round(view.z * 100) + '%';
 }
 function partSVG(p, extra = '') {
-  const L = LIB[p.type];
-  return `<g transform="translate(${p.x} ${p.y}) rotate(${(p.rot || 0) * 90}) scale(${p.flip ? -1 : 1} 1)"${extra}>${L.draw()}</g>`;
+  return `<g transform="translate(${p.x} ${p.y}) rotate(${(p.rot || 0) * 90}) scale(${p.flip ? -1 : 1} 1)"${extra}>${shapeOf(p).draw()}</g>`;
 }
 /* ---- pin numbers on tubes: one editable, movable label per hook ---- */
 const isTube = p => LIB[p.type].cat.startsWith('Tube');
 function pinGeom(p) {
   if (!p.showPins) return [];
   const bb = partBB(p), cx = (bb[0] + bb[2]) / 2, cy = (bb[1] + bb[3]) / 2, out = [];
-  const all = Object.entries(LIB[p.type].hooks).map(([n, h]) => [n, xf(p, h)]);
+  const all = Object.entries(shapeOf(p).hooks).map(([n, h]) => [n, xf(p, h)]);
   for (const [name, [hx, hy]] of all) {
     let ux = hx - cx, uy = hy - cy;
     if (Math.abs(ux) >= Math.abs(uy)) { ux = Math.sign(ux) || 1; uy = 0; } else { uy = Math.sign(uy) || 1; ux = 0; }   // along the lead
@@ -1270,9 +1294,10 @@ function renderProps() {
   }
   const it = items[0];
   if (it.k === 'part') {
-    const p = it.o, L = LIB[p.type];
-    const pins = Object.keys(L.hooks).join(' · ');
-    b.innerHTML = `<div class="what">${esc(L.name)}<small>${esc(L.cat)} · ${Object.keys(L.hooks).length} hook${Object.keys(L.hooks).length > 1 ? 's' : ''}</small></div>
+    const p = it.o, L = LIB[p.type], HK = shapeOf(p).hooks;
+    const pins = Object.keys(HK).join(' · ');
+    b.innerHTML = `<div class="what">${esc(L.name)}<small>${esc(L.cat)} · ${Object.keys(HK).length} hook${Object.keys(HK).length > 1 ? 's' : ''}</small></div>
+      ${L.vary ? `<div class="field"><label for="pVary">${L.vary.label}</label><select id="pVary">${Array.from({ length: L.vary.max - L.vary.min + 1 }, (_, i) => L.vary.min + i).map(n => `<option${n === varyN(p) ? ' selected' : ''}>${n}</option>`).join('')}</select></div>` : ''}
       <div class="field"><label for="pRef">Ref des</label><input type="text" id="pRef" value="${esc(p.ref)}" spellcheck="false"></div>
       <div class="field"><label for="pVal">Value</label><input type="text" id="pVal" value="${esc(p.value)}"></div>
       <div class="field"><label>Show</label><span style="display:flex;gap:12px;flex-wrap:wrap"><label style="display:flex;gap:5px;align-items:center;color:inherit"><input type="checkbox" id="pShowR"${fieldShown(p, 'ref') ? ' checked' : ''}> ref des</label><label style="display:flex;gap:5px;align-items:center;color:inherit"><input type="checkbox" id="pShowV"${fieldShown(p, 'value') ? ' checked' : ''}> value</label></span></div>
@@ -1280,6 +1305,7 @@ function renderProps() {
       <div class="row-btns"><button data-act="rot">Rotate</button><button data-act="flip">Flip H</button><button data-act="flipv">Flip V</button><button data-act="dup">Duplicate</button>${(p.lx || p.ly || p.rdx || p.rdy || p.vdx || p.vdy) ? '<button data-act="lreset">Reset labels</button>' : ''}<button class="del" data-act="del">Delete</button></div>`;
     const bind = (id, f) => { const e = $(id); if (!e) return; e.addEventListener('focus', () => snapshot(), { once: true }); e.addEventListener('input', () => { f(e); render(); changedSoon(); }); e.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') e.blur(); }); };
     bind('pRef', e => p.ref = e.value); bind('pVal', e => p.value = e.value);
+    if ($('pVary')) $('pVary').onchange = e => setVary(p, +e.target.value);
     $('pShowR').onchange = e => { snapshot(); p.showRef = e.target.checked; render(); changed(); };
     $('pShowV').onchange = e => { snapshot(); p.showVal = e.target.checked; render(); changed(); };
   } else if (it.k === 'wire') {
@@ -1370,6 +1396,20 @@ function moveSelection(dx, dy, base) {
 }
 function finishWires() { sheet.wires = sheet.wires.filter(w => w && Array.isArray(w.pts)); for (const w of sheet.wires) w.pts = simplify(w.pts); sheet.wires = sheet.wires.filter(w => w.pts.length >= 2); }
 
+// Change a variable part's setting (e.g. dynode count). Hooks that survive keep their wires; a hook that
+// moves (the anode) drags its wires along; wires left on a removed dynode stay where they were.
+function setVary(p, n) {
+  const L = LIB[p.type]; if (!L.vary) return;
+  n = Math.min(L.vary.max, Math.max(L.vary.min, n)); if (n === varyN(p)) return;
+  snapshot();
+  const before = Object.fromEntries(hooksOf(p).map(h => [h.name, h.pos]));
+  p[L.vary.key] = n;
+  const moves = new Map();
+  for (const h of hooksOf(p)) { const b = before[h.name]; if (b && (b[0] !== h.pos[0] || b[1] !== h.pos[1])) moves.set(key(b), [h.pos[0] - b[0], h.pos[1] - b[1]]); }
+  if (moves.size) dragWiresWithHooks(moves);
+  if (p.pins) { for (const k of Object.keys(p.pins)) if (!(k in shapeOf(p).hooks)) delete p.pins[k]; if (p.showPins) for (const k of Object.keys(shapeOf(p).hooks)) p.pins[k] = p.pins[k] || { t: 'p?' }; }
+  finishWires(); render(); changed(); setMsg(`${p.ref || L.name}: ${n} ${L.vary.label.toLowerCase()}`);
+}
 function rotateSel() {
   if (mode === 'place') { placeRot = (placeRot + 1) % 4; renderOver(); return; }
   const parts = selItems().filter(i => i.k === 'part'); if (!parts.length) return;
@@ -1643,7 +1683,7 @@ function editPin(p, name) {
   Object.assign(inp.style, { left: (r.left - vr.left + view.x + g.x * view.z - w / 2) + 'px', top: (r.top - vr.top + view.y + g.top * view.z - 4) + 'px', width: w + 'px', fontSize: Math.max(10, 9 * view.z) + 'px' });
   $('view').appendChild(inp); editing.inp = inp; inp.focus(); inp.select();
   inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') finishEdit(true); if (e.key === 'Escape') finishEdit(false);
-    if (e.key === 'Tab') { e.preventDefault(); const names = Object.keys(LIB[p.type].hooks), i = names.indexOf(name); finishEdit(true); editPin(p, names[(i + (e.shiftKey ? names.length - 1 : 1)) % names.length]); } });
+    if (e.key === 'Tab') { e.preventDefault(); const names = Object.keys(shapeOf(p).hooks), i = names.indexOf(name); finishEdit(true); editPin(p, names[(i + (e.shiftKey ? names.length - 1 : 1)) % names.length]); } });
   inp.addEventListener('blur', () => finishEdit(true));
 }
 function finishEdit(ok) {
@@ -1665,7 +1705,7 @@ function partDialog(p) {
   const L = LIB[p.type];
   const back = document.createElement('div'); back.className = 'dlg-back';
   back.innerHTML = `<form class="dlg" role="dialog" aria-modal="true" aria-labelledby="pdT" style="width:min(360px,100%)">
-    <h2 id="pdT">${esc(L.name)}</h2><p>${esc(L.cat)} · hooks ${esc(Object.keys(L.hooks).join(', '))}</p>
+    <h2 id="pdT">${esc(L.name)}</h2><p>${esc(L.cat)} · hooks ${esc(Object.keys(shapeOf(p).hooks).join(', '))}</p>
     <div style="display:grid;gap:10px;padding:0 16px">
       <div class="field"><label for="pdRef">Ref des</label><input type="text" id="pdRef" value="${esc(p.ref)}" spellcheck="false" autocomplete="off"></div>
       <div class="field"><label for="pdVal">Value</label><input type="text" id="pdVal" value="${esc(p.value)}" autocomplete="off"></div>
@@ -1721,6 +1761,8 @@ function partMenu(e, raw) {
     + (items.length === 1 && items[0].k === 'part' ? ['ref', 'value'].filter(f => !fieldShown(items[0].o, f)).map(f => `<button role="menuitem" data-m="show-${f}"><span>Show ${FIELD_NAME[f]}</span><span></span></button>`).join('') : '')
     + (items.length === 1 && items[0].k === 'part' && isTube(items[0].o) ? `<button role="menuitem" data-m="pins"><span>${items[0].o.showPins ? 'Hide' : 'Show'} pin numbers</span><span></span></button>` : '')
     + (t.k === 'pin' ? `<button role="menuitem" data-m="editpin"><span>Edit pin number</span><span>dbl-click</span></button>` + (((t.o.pins || {})[t.pin] || {}).dx || ((t.o.pins || {})[t.pin] || {}).dy ? `<button role="menuitem" data-m="resetpin"><span>Put pin number back</span><span></span></button>` : '') : '')
+    + (items.length === 1 && items[0].k === 'part' && LIB[items[0].o.type].vary ? (() => { const q = items[0].o, v = LIB[q.type].vary, cur = varyN(q);
+        return `<div class="mlabel">${v.label}</div><div class="chips">${Array.from({ length: v.max - v.min + 1 }, (_, i) => v.min + i).map(n => `<button class="chip" data-vary="${n}" aria-pressed="${n === cur}">${n}</button>`).join('')}</div>`; })() : '')
     + (items.some(i => i.k === 'wire') ? `<div class="mlabel">Wire color</div>${swatchRow((() => { const cs = new Set(items.filter(i => i.k === 'wire').map(i => i.o.color || 'ink')); return cs.size === 1 ? [...cs][0] : ''; })())}` : '')
     + `<button role="menuitem" data-m="dup"><span>Duplicate</span><span>Ctrl+D</span></button>`
     + (selLabel ? `<button role="menuitem" data-m="del"><span>Hide ${FIELD_NAME[selLabel.field]}</span><span>Del</span></button>`
@@ -1730,9 +1772,10 @@ function partMenu(e, raw) {
   menuEl.style.left = Math.min(e.clientX, window.innerWidth - mw - 8) + 'px';
   menuEl.style.top = Math.min(e.clientY, window.innerHeight - mh - 8) + 'px';
   menuEl.onclick = ev => { const wc = ev.target.closest('[data-wc]'); if (wc) { closeMenu(); colorWires(wc.dataset.wc); return; }
+    const vy = ev.target.closest('[data-vary]'); if (vy) { closeMenu(); setVary(items[0].o, +vy.dataset.vary); return; }
     const b = ev.target.closest('[data-m]'); if (!b) return; const m = b.dataset.m; closeMenu();
     if (m === 'edit') { const L0 = selLabel; if (L0) editInPlace(sheet.parts.find(x => x.id === L0.id), L0.field); return; }
-    if (m === 'pins') { const q = items[0].o; snapshot(); q.showPins = !q.showPins; if (q.showPins) { q.pins = q.pins || {}; for (const n of Object.keys(LIB[q.type].hooks)) q.pins[n] = q.pins[n] || { t: 'p?' }; } render(); changed(); setMsg(q.showPins ? 'Pin numbers shown. Double-click one to edit it; drag it to move it.' : 'Pin numbers hidden. Their text is kept.'); return; }
+    if (m === 'pins') { const q = items[0].o; snapshot(); q.showPins = !q.showPins; if (q.showPins) { q.pins = q.pins || {}; for (const n of Object.keys(shapeOf(q).hooks)) q.pins[n] = q.pins[n] || { t: 'p?' }; } render(); changed(); setMsg(q.showPins ? 'Pin numbers shown. Double-click one to edit it; drag it to move it.' : 'Pin numbers hidden. Their text is kept.'); return; }
     if (m === 'editpin') { editPin(t.o, t.pin); return; }
     if (m === 'resetpin') { snapshot(); const pn = t.o.pins[t.pin]; pn.dx = 0; pn.dy = 0; render(); changed(); return; }
     if (m.startsWith('show-')) { const q = items[0].o; snapshot(); if (m === 'show-ref') q.showRef = true; else q.showVal = true; render(); changed(); return; }

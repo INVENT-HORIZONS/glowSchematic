@@ -1210,6 +1210,10 @@ function renderLib() {
       const direct = items.filter(isDirect), withHtr = items.filter(L => !isDirect(L) && /_ih$/.test(L.type)), kOnly = items.filter(L => !isDirect(L) && !/_ih$/.test(L.type));
       const grp = (label, list) => list.length ? `<div class="subcat">${label}</div><div class="tiles">${list.map(tile).join('')}</div>` : '';
       body = grp('Filament (direct)', direct) + grp('Cathode only', kOnly) + grp('Cathode + filament', withHtr);
+    } else if (cat === 'Semiconductors') {
+      // diodes on their own row(s); transistors start a fresh row underneath
+      const dio = items.filter(L => /^diode/.test(L.type)), xtr = items.filter(L => !/^diode/.test(L.type));
+      body = [dio, xtr].filter(l => l.length).map(l => `<div class="tiles">${l.map(tile).join('')}</div>`).join('');
     } else body = `<div class="tiles">${items.map(tile).join('')}</div>`;
     return `<details class="cat" data-cat="${cat}"${open}><summary>${cat}<small>${items.length}</small></summary>${body}</details>`;
   }).join('') || `<p class="props empty" style="padding:8px">No part matches “${esc(q)}”.</p>`;
